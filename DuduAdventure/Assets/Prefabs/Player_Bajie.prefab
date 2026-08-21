@@ -50,6 +50,7 @@ GameObject:
   - component: {fileID: 8094820366561937636}
   - component: {fileID: 7238942054755559160}
   - component: {fileID: 4568051736920430458}
+  - component: {fileID: 7555109437015770117}
   m_Layer: 9
   m_Name: Player_Bajie
   m_TagString: Player
@@ -149,7 +150,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 3.5
+  m_GravityScale: 0
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -234,18 +235,12 @@ MonoBehaviour:
   _moveSpeed: 8
   _accelerationTime: 0.08
   _decelerationTime: 0.12
-  _jumpForce: 14
+  _depthMoveSpeed: 5
+  _minDepthY: -3
+  _maxDepthY: 1
+  _jumpSpeed: 12
+  _jumpGravity: 40
   _maxJumpCount: 2
-  _jumpCutMultiplier: 0.5
-  _coyoteTime: 0.12
-  _jumpBufferTime: 0.1
-  _groundCheckPoint: {fileID: 3859796113310520722}
-  _groundCheckRadius: 0.2
-  _groundLayer:
-    serializedVersion: 2
-    m_Bits: 256
-  _wallCheckPoint: {fileID: 1897391365989140408}
-  _wallCheckRadius: 0.2
 --- !u!114 &8646823202895705174
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -336,12 +331,20 @@ MonoBehaviour:
   _offscreenGraceTime: 0.6
   _teleportCooldown: 1
   _spreadPerPlayer: 0.8
-  _groundSearchStartHeight: 3
-  _groundSearchDistance: 12
-  _landingClearance: 0.6
-  _groundLayer:
-    serializedVersion: 2
-    m_Bits: 256
+--- !u!114 &7555109437015770117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7649244050215804869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 276a7a157177c4908b0bde5aab0cde79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Core.DepthSortByY
+  _sortPrecision: 100
+  _sortOffset: 0
 --- !u!1 &7861761815158082890
 GameObject:
   m_ObjectHideFlags: 0
