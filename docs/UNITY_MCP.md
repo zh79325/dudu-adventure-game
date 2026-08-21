@@ -44,7 +44,26 @@ Unity 项目位置：
 
 ### 第一步：装 Unity 插件
 
-**已装好。** 当前这套是项目重建后用插件安装器 + 窗口内自动下载 server 二进制装成的，`Packages/manifest.json` 保持 Unity 6.5 Universal 2D 的原始状态，没加任何 scopedRegistry。
+**已装好。** `unity-mcp-cli` 往 `DuduAdventure/Packages/manifest.json` 里写了两样东西——OpenUPM 源和插件依赖：
+
+```json
+{
+  "dependencies": {
+    "com.ivanmurzak.unity.mcp": "0.89.0"
+  },
+  "scopedRegistries": [
+    {
+      "name": "package.openupm.com",
+      "url": "https://package.openupm.com",
+      "scopes": ["com.ivanmurzak", "extensions.unity"]
+    }
+  ]
+}
+```
+
+`extensions.unity` 这个 scope 不能省——插件依赖 OpenUPM 上的 `extensions.unity.playerprefsex`，少了它整个 resolve 会失败。
+
+包解析完之后，server 二进制由插件在窗口里自动下载（约 110 MB），NuGet 依赖由 `DependencyResolver` 从 `api.nuget.org` 拉到 `Assets/Plugins/NuGet/`。
 
 验证是否真的装好，看这三处（都在 `DuduAdventure/` 下）：
 
@@ -56,32 +75,13 @@ grep -c "error CS" Logs/Editor.log                       # 应为 0
 
 三条都过，菜单栏就会有 **Window → AI Game Developer — MCP**。
 
-#### 备用方案
-
-装不上时按顺序试：
+#### 手工安装（CLI 失败时）
 
 **unitypackage 安装器**（最稳，自带依赖、全程离线）：从 https://github.com/IvanMurzak/Unity-MCP/releases 下载 `AI-Game-Dev-Installer.unitypackage`，Unity 里 **Assets → Import Package → Custom Package** 导入，全选 Import。
 
-**改 manifest**（走 OpenUPM）：
+**手改 manifest**：照上面那段 JSON 补进 `Packages/manifest.json`，然后把 Unity 切到前台，它会自动开始解析。
 
-```json
-{
-  "scopedRegistries": [
-    {
-      "name": "package.openupm.com",
-      "url": "https://package.openupm.com",
-      "scopes": ["com.ivanmurzak", "extensions.unity"]
-    }
-  ],
-  "dependencies": {
-    "com.ivanmurzak.unity.mcp": "0.89.0"
-  }
-}
-```
-
-`extensions.unity` 这个 scope 也是必需的——插件依赖 OpenUPM 上的 `extensions.unity.playerprefsex`，少了它会解析失败。改完把 Unity 切到前台，它会自动开始解析。
-
-**命令行**（需要 Node.js）：
+**命令行**：
 
 ```bash
 npm install -g unity-mcp-cli

@@ -25,69 +25,58 @@ URP 对 2D 的支持很完善（2D 光照、Sprite 遮罩、后处理都比 Buil
 
 ---
 
-## 第二步：创建项目（仓库根 = Unity 项目）
+## 第二步：项目布局（Unity 项目在 `DuduAdventure/` 子目录）
 
-本项目采用**仓库根目录直接作为 Unity 项目**的布局。仓库里已有的 `Assets/` 和 `.gitignore` 就是按这个结构准备的，所以不要再建子目录，否则代码要搬来搬去、`.gitignore` 也得改。
-
-目标结构：
+**项目已经建好了**，用 Unity Hub 的 **Add → Add project from disk** 指向下面这个目录即可打开：
 
 ```
-dudu-adventure-game/          ← 这就是 Unity 项目根目录
+/Users/eleme/code/github/dudu-adventure-game/DuduAdventure
+```
+
+实际结构：
+
+```
+dudu-adventure-game/              ← Git 仓库根
 ├── .git/
-├── .gitignore                ← 已配置好（忽略 Library/ Temp/ Logs/ 等）
+├── .gitignore
 ├── README.md
-├── docs/
-├── Assets/                   ← 骨架代码已在这里
-│   └── Scripts/
-├── Packages/                 ← Unity 创建
-├── ProjectSettings/          ← Unity 创建
-└── Library/                  ← Unity 创建，已被 gitignore
+├── docs/                         ← GDD / SETUP / UNITY_MCP
+└── DuduAdventure/                ← 这才是 Unity 项目根
+    ├── Assets/
+    │   ├── Scripts/              ← 10 个骨架脚本在这里
+    │   ├── Sprites/ Prefabs/ Animations/ Tilemaps/ ...
+    │   ├── Scenes/               ← SampleScene
+    │   ├── Settings/             ← URP 渲染管线配置（模板生成）
+    │   └── Plugins/NuGet/        ← MCP 插件依赖，已 gitignore
+    ├── Packages/
+    ├── ProjectSettings/
+    ├── UserSettings/             ← 已 gitignore（内含 MCP token）
+    └── Library/                  ← 已 gitignore
 ```
 
-> **注意**：Unity-MCP 插件要求**项目路径不能包含空格**。`/Users/eleme/code/github/dudu-adventure-game` 没有空格，符合要求。
+> **为什么不是「仓库根 = Unity 项目」**：本文档早期版本推荐过那种布局，但实际操作中 Unity Hub 建项目时生成的是子目录，两种结构并存过一段时间，结果出现了**两份 `Assets/Scripts`**——改了仓库根那份，Unity 完全不认，白改。现在已统一为子目录布局，仓库根不再有 `Assets/`。
 
-### 方式 A：直接指向现有目录（先试这个）
-
-1. Unity Hub → **Projects** → **New project**
-2. 编辑器版本选 **6.5.x**
-3. 模板选 **Universal 2D**
-   - 不要选 "2D (Built-In Render Pipeline)"（已废弃）
-   - 列表里看不到就在搜索框输入 "2D"
-4. **Project name**: `dudu-adventure-game`
-5. **Location**: `/Users/eleme/code/github`（注意是**父目录**，不是仓库本身）
-6. 点击 **Create project**
-
-Unity Hub 会拼成 `/Users/eleme/code/github/dudu-adventure-game`，正好是现有仓库。如果它提示目录非空但允许继续，就继续——Unity 只会补上 `Packages/`、`ProjectSettings/`、`Library/`，不会动你的 `Assets/Scripts` 和 `docs/`。
-
-### 方式 B：Unity Hub 拒绝时的备选
-
-如果 Unity Hub 因为目录已存在而不让创建：
-
-1. 先在别处正常创建，比如 Location 选 `~/Desktop`，Project name 填 `DuduTemp`
-2. 创建完成后**关闭 Unity 编辑器**
-3. 把 Unity 生成的目录搬到仓库根：
-
-```bash
-cd ~/Desktop/DuduTemp
-mv Packages ProjectSettings /Users/eleme/code/github/dudu-adventure-game/
-# Assets 里 Unity 生成的默认内容（Settings 文件夹等）也要一起搬
-cp -R Assets/. /Users/eleme/code/github/dudu-adventure-game/Assets/
-```
-
-4. Unity Hub → **Add** → **Add project from disk** → 选 `/Users/eleme/code/github/dudu-adventure-game`
-5. 确认能正常打开后，`~/Desktop/DuduTemp` 就可以不管了
-
-> 方式 B 里 `Assets/` 是**合并**而不是覆盖，所以要用 `cp -R Assets/.` 这种写法。URP 模板会在 `Assets/Settings/` 下生成渲染管线配置文件，漏搬会导致画面异常。
+> **注意**：Unity-MCP 插件要求**项目路径不能包含空格**。上面这个路径没有空格，符合要求。
 
 ---
 
 ## 第三步：确认骨架代码被识别
 
-因为仓库根就是 Unity 项目，`Assets/Scripts` 已经在正确位置了，**不需要复制任何文件**。
+脚本已经在 `DuduAdventure/Assets/Scripts/` 下了，**不需要再复制任何文件**。
 
-打开 Unity 后它会自动编译。检查 **Console 窗口没有红色报错**即可——骨架代码已按 Unity 6 的 API 写好：用 `Rigidbody2D.linearVelocity` 而不是旧版的 `.velocity`，用 `Physics2D.OverlapCircle` 的 List 重载而不是已废弃的 `NonAlloc` 系列。
+打开 Unity 后它会自动编译。骨架代码已按 Unity 6 的 API 写好：用 `Rigidbody2D.linearVelocity` 而不是旧版的 `.velocity`，用 `Physics2D.OverlapCircle` 的 `List` 重载而不是已废弃的 `NonAlloc` 系列，检查点标识用组件自带的序列化 ID 而不是 Unity 6.3 起已废弃的 `GetInstanceID()`。
 
-Unity 首次导入会为每个文件生成 `.meta` 文件，这些**需要提交到 Git**（`.gitignore` 已配置为保留它们）。
+想确认编译状态，不用盯 Console，直接看这两处：
+
+```bash
+cd DuduAdventure
+ls -l Library/ScriptAssemblies/Assembly-CSharp.dll   # 存在 = 我们的脚本编译成功
+grep -c "error CS" Logs/Editor.log                   # 应为 0
+```
+
+`Assembly-CSharp.dll` **缺失是个强信号**：说明有编译错误，而编译错误会让域重载失败，连带导致 `[MenuItem]`、`[InitializeOnLoad]` 不注册——插件菜单会凭空消失。遇到「菜单不见了」先查这里。
+
+Unity 首次导入会为每个文件生成 `.meta`，这些**需要提交到 Git**（`.gitignore` 已配置为保留）。
 
 ---
 
@@ -97,13 +86,13 @@ Unity 首次导入会为每个文件生成 `.meta` 文件，这些**需要提交
 
 ### 4.1 允许旧版 Input（否则代码报错）
 
-骨架代码用的是旧版 `Input.GetAxisRaw()` / `Input.GetButtonDown()`。Unity 6 默认可能只启用了新版 Input System，这时旧版调用会**抛异常**。
+骨架代码用的是旧版 `Input.GetAxisRaw()` / `Input.GetButtonDown()`。而 Universal 2D 模板默认只启用新版 Input System（`activeInputHandler: 1`），这时旧版调用会在运行时**抛异常**——注意是运行时，编译期看不出问题。
 
-**Edit → Project Settings → Player → Other Settings → Active Input Handling** → 改成 **Both**
+**这一项已经改好了**（`ProjectSettings.asset` 里 `activeInputHandler` 已由 `1` 改为 `2` = Both）。但**必须重启 Unity 编辑器才生效**，这是 Unity 的限制。
 
-改完 Unity 会要求重启编辑器，重启即可。
+要手工确认或改动：**Edit → Project Settings → Player → Other Settings → Active Input Handling** → 选 **Both**。
 
-> 后期做触屏和手柄时会迁移到 New Input System，届时再改成 "Input System Package (New)"。现在先用旧版快速验证手感。
+> 后期做触屏和手柄时会迁移到 New Input System（模板已经带了 `Assets/Settings/InputSystem_Actions.inputactions`，`com.unity.inputsystem 1.20.0` 也已安装），届时再改成 "Input System Package (New)"。现在先用旧版快速验证手感。
 
 ### 4.2 给 2D 场景加全局光（否则精灵全黑）
 
@@ -134,17 +123,27 @@ URP 的 2D 渲染器下，Sprite 默认材质是 **Sprite-Lit-Default**（受光
 
 ---
 
-## 第五步：安装需要的 Package
+## 第五步：Package 现状
 
-**Window → Package Manager** → 左上角 **+** → **Install package by name**：
+**Window → Package Manager** 里可以看到，Universal 2D 模板已经带齐了大部分东西，不用重复装：
+
+| 包名 | 版本 | 用途 |
+|------|------|------|
+| `com.unity.render-pipelines.universal` | 17.6.0 | URP |
+| `com.unity.inputsystem` | 1.20.0 | 新版输入（触屏+手柄），后期迁移时用 |
+| `com.unity.2d.tilemap.extras` | 8.0.3 | Rule Tile 等增强 Tilemap 工具 |
+| `com.unity.2d.animation` | 15.1.0 | 骨骼/帧动画 |
+| `com.unity.2d.aseprite` | 5.0.3 | 直接导入 `.aseprite` 文件 |
+| `com.unity.2d.spriteshape` | 15.0.3 | 曲线地形 |
+| `com.ivanmurzak.unity.mcp` | 0.89.0 | AI 助手接入（走 OpenUPM 源，见 UNITY_MCP.md） |
+
+还可能想装的：
 
 | 包名 | 用途 | 何时装 |
 |------|------|--------|
-| `com.unity.inputsystem` | 新版输入（触屏+手柄） | 做操作适配时 |
-| `com.unity.2d.tilemap.extras` | Rule Tile 等增强 Tilemap 工具 | 做关卡时 |
-| `com.unity.cinemachine` | 高级相机（可替代自写的 CameraFollow） | 可选 |
+| `com.unity.cinemachine` | 高级相机，可替代自写的 CameraFollow | 觉得自写相机不够用时 |
 
-Universal 2D 模板已经自带 2D Sprite、2D Tilemap、2D Animation、URP，不用重复装。
+`com.unity.2d.aseprite` 值得留意——它让你把 Aseprite 源文件直接丢进 `Assets/Sprites/`，Unity 自动切图并生成动画剪辑，省掉手工导出雪碧图这一步。
 
 ---
 
@@ -156,13 +155,24 @@ Universal 2D 模板已经自带 2D Sprite、2D Tilemap、2D Animation、URP，�
 
 **File → New Scene** → 选 **Basic 2D (URP)** → 保存为 `Assets/Scenes/Level1_HuaGuoShan.unity`
 
-### 6.2 配置图层
+### 6.2 Tag 与 Layer（已配置好）
 
-**Edit → Project Settings → Tags and Layers**，在 Layers 里添加：
+**这一步已经做完了**，`Edit → Project Settings → Tags and Layers` 里可以核对。
 
-- Layer 6: `Ground`
-- Layer 7: `Player`
-- Layer 8: `Enemy`
+Layer（8 号往后才是用户层，0–7 被 Unity 占用）：
+
+| 编号 | 名称 | 用途 |
+|------|------|------|
+| 8 | `Ground` | 地面，PlayerController 的落地检测靠它 |
+| 9 | `Player` | 玩家 |
+| 10 | `Enemy` | 敌人，PlayerCombat 的攻击判定靠它 |
+| 11 | `Platform` | 可穿透平台 |
+| 12 | `Hazard` | 尖刺、岩浆等环境伤害 |
+| 13 | `Interactable` | 可交互物（宝箱、开关） |
+
+Tag：`Player`、`Enemy`、`Checkpoint`、`LevelEnd`、`Hazard`。
+
+> Tag 和 Layer 是两套独立机制，别混。Layer 给物理系统做碰撞筛选（`LayerMask`），Tag 给代码做身份识别（`CompareTag`）。玩家两样都要设。
 
 ### 6.3 建地面
 
@@ -216,16 +226,30 @@ Universal 2D 模板已经自带 2D Sprite、2D Tilemap、2D Animation、URP，�
 
 ---
 
-## 第七步：提交代码
+## 第七步：版本管理
+
+仓库已经有基线提交和迁移提交，日常改完直接提交即可：
 
 ```bash
 cd /Users/eleme/code/github/dudu-adventure-game
 git add .
-git commit -m "feat: Unity 6.5 项目初始化 + 核心架构骨架"
-git push origin main
+git status          # 提交前扫一眼，确认没有意外的大文件
+git commit -m "feat: 你做的改动"
 ```
 
-`.gitignore` 已配置好会排除 `Library/`、`Temp/`、`Logs/` 等自动生成目录。
+### `.gitignore` 排除了什么，以及为什么
+
+| 排除项 | 原因 |
+|--------|------|
+| `Library/`、`Temp/`、`Logs/`、`Build/` | Unity 自动生成，换机重新导入即可 |
+| `UserSettings/` | **含 Unity-MCP 的连接 token**，属于本机凭据，绝不能进版本库 |
+| `Assets/Plugins/NuGet/` | 18 MB 二进制依赖，插件的 DependencyResolver 会照 `.nuget-installed.json` 重新拉 |
+| `*.slnx`、`.vscode/`、`.DS_Store` | IDE / 系统本地产物 |
+| `.meta` 文件 | **不排除，必须提交**——Unity 靠它保存资源 GUID 和导入设置，丢了会导致引用全断 |
+
+加上这些排除后，待提交文件从 178 个降到 89 个。
+
+> **一个容易踩的坑**：`.gitignore` 里只要模式中间含斜杠，就会被**锚定到 `.gitignore` 所在目录**。所以写 `Assets/Plugins/NuGet/` 只能匹配仓库根的 `Assets/`，匹配不到 `DuduAdventure/Assets/`，必须写成 `**/Assets/Plugins/NuGet/`。改完用 `git check-ignore -v <路径>` 验证一下，别靠猜。
 
 ---
 
