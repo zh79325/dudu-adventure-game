@@ -1,19 +1,19 @@
+using System.Collections.Generic;
 using UnityEngine;
-using DuduAdventure.Stats;
+using DuduAdventure.Player;
 
 namespace DuduAdventure.Equipment
 {
     /// <summary>
-    /// 地面掉落物 - 玩家靠近后自动拾取并装备
+    /// 地面掉落物 - 玩家站上去按攻击键手动拾取（放入背包）
     /// </summary>
     /// <remarks>
-    /// 生成方式：LootDropper 在敌人死亡时 Instantiate 此 Prefab，
-    /// 并通过 Init() 注入 EquipmentInstance 数据。
+    /// 拾取流程：
+    /// 1. 玩家进入 Trigger 范围 → 显示拾取提示（将来加 UI）
+    /// 2. 玩家按攻击键 → 调用 EquipmentManager.PickUp() 放入背包
+    /// 3. 玩家之后通过背包 UI 选择穿哪件
     /// 
-    /// 拾取逻辑：
-    /// - 使用 Trigger 碰撞检测玩家进入范围
-    /// - 拾取后通知玩家的 EquipmentManager 装备
-    /// - 播放简单的浮动动画（向上弹起再落下）
+    /// 多人支持：同时只有一个玩家能拾取同一个掉落物。
     /// </remarks>
     [RequireComponent(typeof(Collider2D))]
     public class DropPickup : MonoBehaviour
@@ -32,7 +32,7 @@ namespace DuduAdventure.Equipment
         [SerializeField] private float _bounceDuration = 0.4f;
 
         [Tooltip("落地后闪烁提示持续时间")]
-        [SerializeField] private float _glowDuration = 10f;
+        [SerializeField] private float _glowDuration = 30f;
 
         #endregion
 
@@ -51,6 +51,9 @@ namespace DuduAdventure.Equipment
         private SpriteRenderer _spriteRenderer;
         private float _glowTimer;
 
+        // 范围内的玩家列表
+        private readonly List<GameObject> _playersInRange = new();
+
         #endregion
 
         #region 公共属性
@@ -59,6 +62,11 @@ namespace DuduAdventure.Equipment
         /// 持有的装备数据（UI 悬浮提示用）
         /// </summary>
         public EquipmentInstance Equipment => _equipmentInstance;
+
+        /// <summary>
+        /// 是否已落地（落地前不可拾取）
+        /// </summary>
+        public bool HasLanded => _hasLanded;
 
         #endregion
 
@@ -101,20 +109,18 @@ namespace DuduAdventure.Equipment
 
                 if (t >= 1f)
                 {
-                    // 落地
                     transform.position = _startPos;
                     _hasLanded = true;
                 }
                 else
                 {
-                    // 抛物线：y = 4h*t*(1-t)
                     float yOffset = 4f * _bounceHeight * t * (1f - t);
                     transform.position = _startPos + Vector3.up * yOffset;
                 }
             }
             else
             {
-                // 落地后闪烁提示
+                // 落地后闪烁
                 _glowTimer += Time.deltaTime;
                 if (_spriteRenderer != null)
                 {
@@ -123,6 +129,9 @@ namespace DuduAdventure.Equipment
                     c.a = alpha;
                     _spriteRenderer.color = c;
                 }
+
+                // 检测范围内玩家的输入
+                CheckPickupInput();
 
                 // 超时消失
                 if (_glowTimer > _glowDuration)
@@ -134,33 +143,83 @@ namespace DuduAdventure.Equipment
 
         #endregion
 
-        #region 拾取
+        #region 碰撞检测（进出范围）
 
         private void OnTriggerEnter2D(Collider2D other)
         {
             if (_isPickedUp) return;
+            if (!IsPlayerLayer(other.gameObject)) return;
+
+            if (!_playersInRange.Contains(other.gameObject))
+            {
+                _playersInRange.Add(other.gameObject);
+            }
+
+            // TODO: 显示拾取提示 UI（"按 J 拾取"）
+        }
+
+        private void OnTriggerExit2D(Collider2D other)
+        {
+            _playersInRange.Remove(other.gameObject);
+
+            // TODO: 隐藏拾取提示 UI
+        }
+
+        #endregion
+
+        #region 拾取逻辑
+
+        /// <summary>
+        /// 检测范围内玩家是否按了攻击键
+        /// </summary>
+        private void CheckPickupInput()
+        {
             if (_equipmentInstance == null) return;
 
-            // 检查是否是玩家图层
-            if ((_playerLayer.value & (1 << other.gameObject.layer)) == 0)
-                return;
+            // 遍历范围内的玩家，检查谁按了攻击键
+            for (int i = _playersInRange.Count - 1; i >= 0; i--)
+            {
+                var playerGO = _playersInRange[i];
+                if (playerGO == null)
+                {
+                    _playersInRange.RemoveAt(i);
+                    continue;
+                }
 
-            // 获取玩家的 EquipmentManager
-            var equipMgr = other.GetComponent<EquipmentManager>();
+                // 获取输入源
+                var inputSource = playerGO.GetComponent<IPlayerInputSource>();
+                if (inputSource == null) continue;
+
+                // 按攻击键拾取
+                if (inputSource.AttackPressed)
+                {
+                    TryPickUp(playerGO);
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 尝试让指定玩家拾取
+        /// </summary>
+        private void TryPickUp(GameObject playerGO)
+        {
+            var equipMgr = playerGO.GetComponent<EquipmentManager>();
             if (equipMgr == null)
-                equipMgr = other.GetComponentInParent<EquipmentManager>();
+                equipMgr = playerGO.GetComponentInParent<EquipmentManager>();
 
             if (equipMgr == null) return;
 
-            // 拾取并装备
-            equipMgr.PickUpAndEquip(_equipmentInstance);
+            // 放入背包（不自动穿戴）
+            equipMgr.PickUp(_equipmentInstance);
             _isPickedUp = true;
 
-            Debug.Log($"[DropPickup] {other.name} 拾取了 [{_equipmentInstance.Template.Rarity}] " +
-                      $"{_equipmentInstance.Template.DisplayName}");
+            Debug.Log($"[DropPickup] {playerGO.name} 拾取了 " +
+                      $"[{_equipmentInstance.Template.Rarity}] {_equipmentInstance.Template.DisplayName}" +
+                      $" → 放入背包");
 
             // TODO: 播放拾取音效
-            // TODO: 显示装备获得 UI 提示
+            // TODO: 显示"获得装备"飘字
 
             Destroy(gameObject);
         }
@@ -169,18 +228,20 @@ namespace DuduAdventure.Equipment
 
         #region 辅助
 
-        /// <summary>
-        /// 根据稀有度返回对应颜色
-        /// </summary>
+        private bool IsPlayerLayer(GameObject go)
+        {
+            return (_playerLayer.value & (1 << go.layer)) != 0;
+        }
+
         private Color GetRarityColor(Rarity rarity)
         {
             switch (rarity)
             {
                 case Rarity.Common:    return Color.white;
                 case Rarity.Uncommon:  return Color.green;
-                case Rarity.Rare:      return new Color(0.2f, 0.5f, 1f); // 蓝色
-                case Rarity.Epic:      return new Color(0.6f, 0.2f, 0.9f); // 紫色
-                case Rarity.Legendary: return new Color(1f, 0.6f, 0f); // 橙色
+                case Rarity.Rare:      return new Color(0.2f, 0.5f, 1f);
+                case Rarity.Epic:      return new Color(0.6f, 0.2f, 0.9f);
+                case Rarity.Legendary: return new Color(1f, 0.6f, 0f);
                 default:               return Color.white;
             }
         }

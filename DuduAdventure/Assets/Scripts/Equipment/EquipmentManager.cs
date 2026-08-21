@@ -35,6 +35,11 @@ namespace DuduAdventure.Equipment
         /// </summary>
         public event Action<EquipmentInstance> OnItemPickedUp;
 
+        /// <summary>
+        /// 背包内容变化时触发（拾取/穿戴/卸下都会触发）
+        /// </summary>
+        public event Action OnInventoryChanged;
+
         #endregion
 
         #region 运行时状态
@@ -73,6 +78,7 @@ namespace DuduAdventure.Equipment
 
             _inventory.Add(item);
             OnItemPickedUp?.Invoke(item);
+            OnInventoryChanged?.Invoke();
 
             Debug.Log($"[EquipmentManager] 拾取: {item.DisplayName} ({item.Rarity})");
         }
@@ -100,6 +106,7 @@ namespace DuduAdventure.Equipment
             _stats.AddModifiers(item.InstanceId, item.GetModifiers());
 
             OnEquipmentChanged?.Invoke(slot);
+            OnInventoryChanged?.Invoke();
             Debug.Log($"[EquipmentManager] 装备: {item.DisplayName} → {slot}");
         }
 
@@ -115,6 +122,7 @@ namespace DuduAdventure.Equipment
             _inventory.Add(item);
 
             OnEquipmentChanged?.Invoke(slot);
+            OnInventoryChanged?.Invoke();
             Debug.Log($"[EquipmentManager] 卸下: {item.DisplayName}");
         }
 
@@ -130,6 +138,27 @@ namespace DuduAdventure.Equipment
             Equip(item);
 
             OnItemPickedUp?.Invoke(item);
+        }
+
+        /// <summary>
+        /// 获取所有已穿戴装备（只读视图，UI 用）
+        /// </summary>
+        public IReadOnlyDictionary<EquipmentSlot, EquipmentInstance> GetAllEquipped()
+        {
+            return _equipped;
+        }
+
+        /// <summary>
+        /// 丢弃背包中的一件装备
+        /// </summary>
+        public void DiscardFromInventory(EquipmentInstance item)
+        {
+            if (item == null) return;
+            if (_inventory.Remove(item))
+            {
+                OnInventoryChanged?.Invoke();
+                Debug.Log($"[EquipmentManager] 丢弃: {item.DisplayName}");
+            }
         }
 
         #endregion
