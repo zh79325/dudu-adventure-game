@@ -4,158 +4,122 @@ using DuduAdventure.Core;
 namespace DuduAdventure.Player
 {
     /// <summary>
-    /// 玩家控制器 - 负责处理孙悟空的移动和跳跃
-    /// 使用 Rigidbody2D 进行物理驱动的移动
+    /// 玩家控制器 - DNF 式 2.5D 横版格斗移动
     /// </summary>
     /// <remarks>
-    /// 设计理念：
-    /// - 控制器只负责"移动输入 -> 物理运动"的转换
-    /// - 状态管理交给 PlayerStateMachine
-    /// - 战斗逻辑交给 PlayerCombat
-    /// - 各组件各司其职，互不耦合
+    /// 物理模型：
+    /// - Rigidbody2D.gravityScale = 0，地面上自由走
+    /// - X 轴 = 水平移动（通过 velocity，与墙壁/房间边界碰撞）
+    /// - Y 轴 = 纵深移动 + 跳跃高度的叠加
+    ///   - _groundY 记录角色在地面上的纵深坐标（按上下键改变）
+    ///   - _jumpHeight 记录跳跃腾空高度（按跳跃键起跳，假重力拉回来）
+    ///   - transform.position.y = _groundY + _jumpHeight
+    /// - 精灵排序按 _groundY：越小（越靠镜头前方）排序值越大，渲染在前面
+    ///
+    /// 与平台跳跃的关键区别：
+    /// - 没有真实重力、没有地面碰撞检测、没有平台
+    /// - 跳跃是"原地腾空"，落回来还是同一个纵深位置
+    /// - 上下走 ≠ 跳跃；上下是走位，跳跃是按 Jump 键
     /// </remarks>
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(PlayerStateMachine))]
-    // 禁止重复挂载：PlayerStateMachine 上也标了 [RequireComponent(typeof(PlayerController))]，
-    // 手动 AddComponent 时 Unity 会先自动补一个默认值的 PlayerController，
-    // 结果同一个角色身上出现两份，而 GetComponent 只会拿到先加的那一个，
-    // 配置全写进了不生效的那一份里 —— 曾经因此排查了很久。
     [DisallowMultipleComponent]
     public class PlayerController : MonoBehaviour
     {
         #region Inspector 配置
 
-        [Header("移动设置")]
+        [Header("水平移动")]
         [Tooltip("水平移动速度")]
         [SerializeField] private float _moveSpeed = 8f;
 
-        [Tooltip("加速时间（从 0 到最大速度需要多久，越小越灵敏）")]
+        [Tooltip("加速时间（从 0 到最大速度）")]
         [SerializeField] private float _accelerationTime = 0.1f;
 
         [Tooltip("减速时间（松开方向键后多久停下来）")]
-        [SerializeField] private float _decelerationTime = 0.2f;
+        [SerializeField] private float _decelerationTime = 0.15f;
 
-        [Header("跳跃设置")]
-        [Tooltip("跳跃力度")]
-        [SerializeField] private float _jumpForce = 14f;
+        [Header("纵深移动（上下走位）")]
+        [Tooltip("纵深方向移动速度（通常比水平慢一些）")]
+        [SerializeField] private float _depthMoveSpeed = 5f;
 
-        [Tooltip("最大跳跃次数（1 = 普通跳跃, 2 = 二段跳）")]
-        [SerializeField] private int _maxJumpCount = 2;
+        [Tooltip("纵深可走的下界（Y 坐标，越小越靠近镜头）")]
+        [SerializeField] private float _minDepthY = -3f;
 
-        [Tooltip("松开跳跃键时，垂直速度的衰减比例（0~1，越小跳得越低）")]
-        [SerializeField] private float _jumpCutMultiplier = 0.5f;
+        [Tooltip("纵深可走的上界（Y 坐标，越大越远离镜头）")]
+        [SerializeField] private float _maxDepthY = 1f;
 
-        [Header("土狼时间（Coyote Time）")]
-        [Tooltip("离开平台后仍可跳跃的时间窗口（秒）")]
-        [SerializeField] private float _coyoteTime = 0.12f;
+        [Header("跳跃")]
+        [Tooltip("跳跃初始速度")]
+        [SerializeField] private float _jumpSpeed = 12f;
 
-        [Header("跳跃缓冲（Jump Buffer）")]
-        [Tooltip("落地前按跳跃键的缓冲时间（秒）")]
-        [SerializeField] private float _jumpBufferTime = 0.1f;
+        [Tooltip("跳跃假重力（每秒减少的上升速度）")]
+        [SerializeField] private float _jumpGravity = 40f;
 
-        [Header("地面检测")]
-        [Tooltip("地面检测点（通常放在角色脚底）")]
-        [SerializeField] private Transform _groundCheckPoint;
-
-        [Tooltip("地面检测半径")]
-        [SerializeField] private float _groundCheckRadius = 0.2f;
-
-        [Tooltip("地面图层（只检测这些图层）")]
-        [SerializeField] private LayerMask _groundLayer;
-
-        [Header("墙壁检测（预留功能）")]
-        [Tooltip("墙壁检测点（通常放在角色侧面）")]
-        [SerializeField] private Transform _wallCheckPoint;
-
-        [Tooltip("墙壁检测半径")]
-        [SerializeField] private float _wallCheckRadius = 0.2f;
+        [Tooltip("最大跳跃次数（1 = 单跳, 2 = 二段跳）")]
+        [SerializeField] private int _maxJumpCount = 1;
 
         #endregion
 
         #region 组件引用
 
-        // 刚体组件 - 控制物理运动
         private Rigidbody2D _rigidbody;
-
-        // 玩家状态机
         private PlayerStateMachine _stateMachine;
-
-        // Sprite 渲染器（用于翻转朝向）
         private SpriteRenderer _spriteRenderer;
 
-        // 这个角色专属的输入源（键盘 或 某一个手柄）
-        // 本地多人的关键：绝不能读全局 Input，否则 4 个角色会一起响应同一个按键
+        // 本角色专属输入源
         private IPlayerInputSource _input;
 
         #endregion
 
         #region 运行时状态
 
-        // 水平输入值（-1 到 1）
+        // 输入值
         private float _horizontalInput;
+        private float _verticalInput;
 
-        // 当前水平速度（用于平滑加速/减速）
+        // 水平速度平滑
         private float _currentHorizontalSpeed;
-
-        // SmoothDamp 内部使用的速度缓存
-        // 注意：必须是独立字段，不能和 _currentHorizontalSpeed 共用同一个变量，
-        // 否则插值计算会出错（角色移动会变得非常僵硬或抽搐）
         private float _speedSmoothVelocity;
 
-        // 剩余跳跃次数
-        private int _jumpCount;
+        // 纵深地面 Y 坐标（不含跳跃高度）
+        private float _groundY;
 
-        // 土狼时间计时器
-        private float _coyoteTimer;
+        // 跳跃
+        private float _jumpHeight;      // 当前腾空高度（0 = 在地上）
+        private float _jumpVelocity;    // 跳跃垂直速度
+        private int _jumpCount;         // 已消耗的跳跃次数
+        private bool _isGrounded;       // 是否在地面上
 
-        // 跳跃缓冲计时器
-        private float _jumpBufferTimer;
-
-        // 是否正在地面上
-        private bool _isGrounded;
-
-        // 上一帧是否在地面上（用于检测刚离开地面的瞬间）
-        private bool _wasGrounded;
-
-        // 角色朝向（1 = 右, -1 = 左）
+        // 朝向
         private int _facingDirection = 1;
-
-        // 是否正在贴墙滑行（预留）
-        private bool _isWallSliding;
 
         #endregion
 
-        #region 公共属性（供其他脚本读取）
+        #region 公共属性
 
-        /// <summary>
-        /// 当前水平移动速度
-        /// </summary>
-        public float HorizontalSpeed => _rigidbody != null ? _rigidbody.linearVelocity.x : 0f;
+        /// <summary>当前水平速度</summary>
+        public float HorizontalSpeed => _currentHorizontalSpeed;
 
-        /// <summary>
-        /// 当前垂直速度
-        /// </summary>
-        public float VerticalSpeed => _rigidbody != null ? _rigidbody.linearVelocity.y : 0f;
+        /// <summary>跳跃垂直速度（正 = 上升, 负 = 下落, 0 = 地面）</summary>
+        public float VerticalSpeed => _jumpVelocity;
 
-        /// <summary>
-        /// 是否正在地面上
-        /// </summary>
+        /// <summary>是否在地面上（跳跃高度为 0）</summary>
         public bool IsGrounded => _isGrounded;
 
-        /// <summary>
-        /// 角色朝向（1 = 右, -1 = 左）
-        /// </summary>
+        /// <summary>角色朝向（1 = 右, -1 = 左）</summary>
         public int FacingDirection => _facingDirection;
 
-        /// <summary>
-        /// 是否正在移动（有水平输入）
-        /// </summary>
-        public bool IsMoving => Mathf.Abs(_horizontalInput) > 0.1f;
+        /// <summary>是否正在移动（有水平或纵深输入）</summary>
+        public bool IsMoving => Mathf.Abs(_horizontalInput) > 0.1f || Mathf.Abs(_verticalInput) > 0.1f;
 
-        /// <summary>
-        /// 移动速度配置值（供战斗系统等外部使用）
-        /// </summary>
+        /// <summary>移动速度配置值</summary>
         public float MoveSpeed => _moveSpeed;
+
+        /// <summary>当前地面 Y 坐标（用于深度排序）</summary>
+        public float GroundY => _groundY;
+
+        /// <summary>当前跳跃高度</summary>
+        public float JumpHeight => _jumpHeight;
 
         #endregion
 
@@ -163,294 +127,200 @@ namespace DuduAdventure.Player
 
         private void Awake()
         {
-            // 获取必需组件
             _rigidbody = GetComponent<Rigidbody2D>();
             _stateMachine = GetComponent<PlayerStateMachine>();
             _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
-            // 解析本角色的输入源。Prefab 上应预挂 DeviceInputSource；
-            // 手工摆放的调试角色会自动兜底成键盘输入。
             _input = PlayerInputSourceResolver.Resolve(gameObject);
 
-            // 配置刚体
-            // 冻结旋转，防止角色被碰撞推倒
+            // DNF 式不用重力，全部手动管理
+            _rigidbody.gravityScale = 0f;
             _rigidbody.freezeRotation = true;
         }
 
         private void Start()
         {
-            // 如果场景中没有设置地面检测点，使用自身位置
-            if (_groundCheckPoint == null)
-            {
-                Debug.LogWarning("[PlayerController] 未设置地面检测点，将使用角色底部");
-                // 创建一个子物体作为地面检测点
-                GameObject groundCheck = new GameObject("GroundCheck");
-                groundCheck.transform.SetParent(transform);
-                groundCheck.transform.localPosition = new Vector3(0, -0.5f, 0); // 假设角色高度约 1 单位
-                _groundCheckPoint = groundCheck.transform;
-            }
+            // 以角色初始 Y 坐标作为地面深度起点
+            _groundY = transform.position.y;
+            _isGrounded = true;
         }
 
-        /// <summary>
-        /// Update 每帧调用 - 处理输入
-        /// </summary>
         private void Update()
         {
-            // 读取水平输入（来自本角色绑定的设备，不是全局键盘）
             _horizontalInput = _input.Horizontal;
+            _verticalInput = _input.Vertical;
 
-            // 处理跳跃输入
             HandleJumpInput();
-
-            // 更新朝向
             UpdateFacingDirection();
         }
 
-        /// <summary>
-        /// FixedUpdate 固定物理帧调用 - 处理物理运动
-        /// 注意：物理相关的代码都应放在 FixedUpdate 中
-        /// </summary>
         private void FixedUpdate()
         {
-            // 更新地面检测
-            CheckGrounded();
-
-            // 更新墙壁检测
-            CheckWall();
-
-            // 应用水平移动
+            ApplyDepthMovement();
+            ApplyJumpPhysics();
             ApplyHorizontalMovement();
-
-            // 更新土狼时间和跳跃缓冲计时器
-            UpdateTimers();
+            SyncPosition();
         }
 
         #endregion
 
-        #region 移动逻辑
+        #region 水平移动
 
-        /// <summary>
-        /// 应用水平移动 - 平滑加速和减速
-        /// </summary>
         private void ApplyHorizontalMovement()
         {
-            // 计算目标速度
             float targetSpeed = _horizontalInput * _moveSpeed;
-
-            // 根据是否有输入选择不同的平滑时间
             float smoothTime = Mathf.Abs(targetSpeed) > 0.01f ? _accelerationTime : _decelerationTime;
 
-            // 使用 SmoothDamp 实现平滑的速度过渡
             _currentHorizontalSpeed = Mathf.SmoothDamp(
-                _currentHorizontalSpeed,      // 当前速度
-                targetSpeed,                  // 目标速度
-                ref _speedSmoothVelocity,     // SmoothDamp 的内部速度缓存（必须独立字段）
-                smoothTime                    // 平滑时间
+                _currentHorizontalSpeed,
+                targetSpeed,
+                ref _speedSmoothVelocity,
+                smoothTime
             );
-
-            // 应用速度到刚体（只修改 X 轴，Y 轴由跳跃和重力控制）
-            _rigidbody.linearVelocity = new Vector2(_currentHorizontalSpeed, _rigidbody.linearVelocity.y);
         }
 
-        /// <summary>
-        /// 更新角色朝向 - 根据移动方向翻转精灵
-        /// </summary>
         private void UpdateFacingDirection()
         {
-            // 只在有输入时更新朝向
             if (_horizontalInput > 0.1f)
-            {
-                _facingDirection = 1; // 朝右
-            }
+                _facingDirection = 1;
             else if (_horizontalInput < -0.1f)
-            {
-                _facingDirection = -1; // 朝左
-            }
+                _facingDirection = -1;
 
-            // 通过翻转 X 轴缩放来改变朝向
             if (_spriteRenderer != null)
-            {
                 _spriteRenderer.flipX = _facingDirection == -1;
-            }
         }
 
         #endregion
 
-        #region 跳跃逻辑
+        #region 纵深移动
 
-        /// <summary>
-        /// 处理跳跃输入
-        /// </summary>
+        private void ApplyDepthMovement()
+        {
+            // 纵深输入改变 _groundY（地面上的前后位置）
+            _groundY += _verticalInput * _depthMoveSpeed * Time.fixedDeltaTime;
+            _groundY = Mathf.Clamp(_groundY, _minDepthY, _maxDepthY);
+        }
+
+        #endregion
+
+        #region 跳跃
+
         private void HandleJumpInput()
         {
-            // 检测跳跃键按下
             if (_input.JumpPressed)
             {
-                // 记录跳跃缓冲时间
-                _jumpBufferTimer = _jumpBufferTime;
-            }
-
-            // 检查是否可以跳跃：
-            // 1. 有跳跃缓冲（最近按过跳跃键）
-            // 2. 在地面上 或 在土狼时间内 或 还有剩余跳跃次数（二段跳）
-            bool canJump = _jumpBufferTimer > 0f &&
-                          (_isGrounded || _coyoteTimer > 0f || _jumpCount < _maxJumpCount);
-
-            if (canJump)
-            {
-                Jump();
-            }
-
-            // 松开跳跃键时，减少上升速度（实现短按小跳，长按大跳）
-            if (_input.JumpReleased && _rigidbody.linearVelocity.y > 0f)
-            {
-                // 减少向上的速度
-                Vector2 velocity = _rigidbody.linearVelocity;
-                velocity.y *= _jumpCutMultiplier;
-                _rigidbody.linearVelocity = velocity;
+                if (_jumpCount < _maxJumpCount)
+                {
+                    Jump();
+                }
             }
         }
 
-        /// <summary>
-        /// 执行跳跃
-        /// </summary>
         private void Jump()
         {
-            // 设置垂直速度为跳跃力度
-            _rigidbody.linearVelocity = new Vector2(_rigidbody.linearVelocity.x, _jumpForce);
-
-            // 消耗一次跳跃次数
+            _jumpVelocity = _jumpSpeed;
             _jumpCount++;
-
-            // 重置土狼时间和跳跃缓冲
-            _coyoteTimer = 0f;
-            _jumpBufferTimer = 0f;
-
-            Debug.Log($"[Player] 跳跃！剩余跳跃次数: {_maxJumpCount - _jumpCount}");
+            _isGrounded = false;
         }
 
-        /// <summary>
-        /// 更新各种计时器
-        /// </summary>
-        private void UpdateTimers()
+        private void ApplyJumpPhysics()
         {
-            // 更新土狼时间计时器
-            if (_isGrounded)
+            if (_isGrounded) return;
+
+            // 假重力
+            _jumpVelocity -= _jumpGravity * Time.fixedDeltaTime;
+            _jumpHeight += _jumpVelocity * Time.fixedDeltaTime;
+
+            // 落地判定
+            if (_jumpHeight <= 0f)
             {
-                _coyoteTimer = _coyoteTime; // 在地面上时重置
-            }
-            else
-            {
-                _coyoteTimer -= Time.fixedDeltaTime; // 离开地面后倒计时
-            }
-
-            // 更新跳跃缓冲计时器
-            _jumpBufferTimer -= Time.fixedDeltaTime;
-        }
-
-        #endregion
-
-        #region 检测方法
-
-        /// <summary>
-        /// 地面检测 - 使用 OverlapCircle 检测脚下是否有地面
-        /// </summary>
-        private void CheckGrounded()
-        {
-            _wasGrounded = _isGrounded;
-
-            // 使用 Physics2D.OverlapCircle 在检测点画一个圆，检查是否与地面图层碰撞
-            _isGrounded = Physics2D.OverlapCircle(
-                _groundCheckPoint.position,  // 检测位置
-                _groundCheckRadius,          // 检测半径
-                _groundLayer                 // 只检测地面图层
-            );
-
-            // 刚接触地面时重置跳跃次数
-            if (_isGrounded && !_wasGrounded)
-            {
+                _jumpHeight = 0f;
+                _jumpVelocity = 0f;
                 _jumpCount = 0;
+                _isGrounded = true;
             }
-
-            // TODO: 可选 - 在 Scene 视图中绘制检测区域，方便调试
-            // Debug.DrawRay 或 Gizmos.DrawWireSphere
-        }
-
-        /// <summary>
-        /// 墙壁检测 - 检测角色是否贴着墙壁（预留功能）
-        /// </summary>
-        private void CheckWall()
-        {
-            if (_wallCheckPoint == null) return;
-
-            _isWallSliding = Physics2D.OverlapCircle(
-                _wallCheckPoint.position,
-                _wallCheckRadius,
-                _groundLayer // 墙壁也在地面图层上
-            );
-
-            // TODO: 实现墙壁滑行逻辑（减速下落、墙壁跳跃等）
         }
 
         #endregion
 
-        #region 公共方法（供其他脚本调用）
+        #region 位置同步
 
         /// <summary>
-        /// 设置水平速度（供战斗系统的冲刺等功能使用）
+        /// 将水平速度交给 Rigidbody（享受 X 轴墙壁碰撞），
+        /// Y 轴直接设置（纵深 + 跳跃高度），因为 Y 轴只需代码软边界。
         /// </summary>
+        private void SyncPosition()
+        {
+            // X 轴通过 velocity 走物理碰撞
+            float targetY = _groundY + _jumpHeight;
+            float neededVelY = (targetY - transform.position.y) / Time.fixedDeltaTime;
+
+            _rigidbody.linearVelocity = new Vector2(_currentHorizontalSpeed, neededVelY);
+        }
+
+        #endregion
+
+        #region 公共方法
+
+        /// <summary>设置水平速度（冲刺等外部调用）</summary>
         public void SetHorizontalVelocity(float velocity)
         {
             _currentHorizontalSpeed = velocity;
-            _rigidbody.linearVelocity = new Vector2(velocity, _rigidbody.linearVelocity.y);
         }
 
-        /// <summary>
-        /// 设置垂直速度（供战斗系统的击飞等功能使用）
-        /// </summary>
+        /// <summary>设置垂直速度（击飞等外部调用）</summary>
         public void SetVerticalVelocity(float velocity)
         {
-            _rigidbody.linearVelocity = new Vector2(_rigidbody.linearVelocity.x, velocity);
+            _jumpVelocity = velocity;
+            if (velocity > 0f) _isGrounded = false;
         }
 
-        /// <summary>
-        /// 禁用移动控制（如被击晕、过场动画时）
-        /// </summary>
+        /// <summary>禁用移动控制</summary>
         public void DisableControl()
         {
             enabled = false;
+            _rigidbody.linearVelocity = Vector2.zero;
         }
 
-        /// <summary>
-        /// 恢复移动控制
-        /// </summary>
+        /// <summary>恢复移动控制</summary>
         public void EnableControl()
         {
             enabled = true;
         }
 
+        /// <summary>
+        /// 直接设置地面 Y（传送时使用，避免跳跃残留）
+        /// </summary>
+        public void SetGroundY(float y)
+        {
+            _groundY = Mathf.Clamp(y, _minDepthY, _maxDepthY);
+            _jumpHeight = 0f;
+            _jumpVelocity = 0f;
+            _jumpCount = 0;
+            _isGrounded = true;
+        }
+
         #endregion
 
-        #region 调试可视化
+        #region 调试
 
-        /// <summary>
-        /// 在 Scene 视图中绘制调试辅助线框
-        /// 只在编辑器中生效，不会影响游戏运行
-        /// </summary>
         private void OnDrawGizmosSelected()
         {
-            // 绘制地面检测圆
-            if (_groundCheckPoint != null)
-            {
-                Gizmos.color = _isGrounded ? Color.green : Color.red;
-                Gizmos.DrawWireSphere(_groundCheckPoint.position, _groundCheckRadius);
-            }
+            // 绘制纵深移动范围
+            Gizmos.color = Color.cyan;
+            Vector3 pos = transform.position;
+            Gizmos.DrawLine(
+                new Vector3(pos.x - 1f, _minDepthY, 0f),
+                new Vector3(pos.x + 1f, _minDepthY, 0f));
+            Gizmos.DrawLine(
+                new Vector3(pos.x - 1f, _maxDepthY, 0f),
+                new Vector3(pos.x + 1f, _maxDepthY, 0f));
 
-            // 绘制墙壁检测圆
-            if (_wallCheckPoint != null)
+            // 地面位置指示
+            if (Application.isPlaying)
             {
-                Gizmos.color = _isWallSliding ? Color.blue : Color.yellow;
-                Gizmos.DrawWireSphere(_wallCheckPoint.position, _wallCheckRadius);
+                Gizmos.color = Color.green;
+                Gizmos.DrawWireSphere(new Vector3(pos.x, _groundY, 0f), 0.15f);
             }
         }
 

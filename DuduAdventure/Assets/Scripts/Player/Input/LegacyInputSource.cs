@@ -29,6 +29,8 @@ namespace DuduAdventure.Player
         // 加速手感由 PlayerController 的 SmoothDamp 统一负责。
         public float Horizontal => UnityEngine.Input.GetAxisRaw("Horizontal");
 
+        public float Vertical => UnityEngine.Input.GetAxisRaw("Vertical");
+
         public bool JumpPressed => UnityEngine.Input.GetButtonDown("Jump");
 
         public bool JumpHeld => UnityEngine.Input.GetButton("Jump");

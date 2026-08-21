@@ -29,6 +29,12 @@ namespace DuduAdventure.Player
         float Horizontal { get; }
 
         /// <summary>
+        /// 纵深输入（-1 = 下/靠近镜头, 0 = 松开, 1 = 上/远离镜头）
+        /// DNF 式横版格斗里上下键不是跳跃，而是在房间的纵深方向走位
+        /// </summary>
+        float Vertical { get; }
+
+        /// <summary>
         /// 本帧刚按下跳跃键
         /// </summary>
         bool JumpPressed { get; }

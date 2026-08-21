@@ -136,6 +136,7 @@ namespace DuduAdventure.Enemy
             _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
             _rigidbody.freezeRotation = true;
+            _rigidbody.gravityScale = 0f; // DNF 式：敌人也不用重力
         }
 
         protected virtual void Start()
@@ -216,7 +217,7 @@ namespace DuduAdventure.Enemy
             if (_patrolWaitTimer > 0f)
             {
                 _patrolWaitTimer -= Time.deltaTime;
-                _rigidbody.linearVelocity = new Vector2(0f, _rigidbody.linearVelocity.y);
+                _rigidbody.linearVelocity = Vector2.zero;
                 return;
             }
 
@@ -236,11 +237,8 @@ namespace DuduAdventure.Enemy
                 _patrolWaitTimer = _patrolWaitTime;
             }
 
-            // 移动
-            _rigidbody.linearVelocity = new Vector2(
-                _moveSpeed * _facingDirection,
-                _rigidbody.linearVelocity.y
-            );
+            // 移动（巡逻只走水平方向）
+            _rigidbody.linearVelocity = new Vector2(_moveSpeed * _facingDirection, 0f);
         }
 
         #endregion
@@ -248,7 +246,7 @@ namespace DuduAdventure.Enemy
         #region 追击行为
 
         /// <summary>
-        /// 追击逻辑 - 向玩家移动
+        /// 追击逻辑 - 向玩家移动（水平 + 纵深）
         /// </summary>
         protected virtual void ChaseBehavior()
         {
@@ -269,16 +267,14 @@ namespace DuduAdventure.Enemy
                 return;
             }
 
-            // 向玩家移动
-            float direction = Mathf.Sign(_playerTransform.position.x - transform.position.x);
-            _facingDirection = (int)direction;
+            // 向玩家移动（DNF 式：X 和 Y 都追）
+            Vector2 toPlayer = (Vector2)_playerTransform.position - (Vector2)transform.position;
+            Vector2 moveDir = toPlayer.normalized;
+            float chaseSpeed = _moveSpeed * 1.5f;
 
-            _rigidbody.linearVelocity = new Vector2(
-                _moveSpeed * 1.5f * _facingDirection, // 追击时速度稍快
-                _rigidbody.linearVelocity.y
-            );
+            _facingDirection = toPlayer.x >= 0 ? 1 : -1;
 
-            // TODO: 播放追击动画（加速跑步动画）
+            _rigidbody.linearVelocity = moveDir * chaseSpeed;
         }
 
         #endregion
@@ -306,7 +302,7 @@ namespace DuduAdventure.Enemy
             }
 
             // 停止移动
-            _rigidbody.linearVelocity = new Vector2(0f, _rigidbody.linearVelocity.y);
+            _rigidbody.linearVelocity = Vector2.zero;
 
             // 检查攻击冷却
             if (_attackCooldownTimer <= 0f)
@@ -354,7 +350,7 @@ namespace DuduAdventure.Enemy
         protected virtual void HitBehavior()
         {
             // 受击状态短暂保持后回到追击/巡逻
-            _rigidbody.linearVelocity = new Vector2(0f, _rigidbody.linearVelocity.y);
+            _rigidbody.linearVelocity = Vector2.zero;
 
             // 受击持续时间由状态机或计时器控制
             // 这里简化处理，直接切回追击

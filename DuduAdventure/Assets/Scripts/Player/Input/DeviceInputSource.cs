@@ -127,6 +127,33 @@ namespace DuduAdventure.Player
             }
         }
 
+        public float Vertical
+        {
+            get
+            {
+                if (_gamepad != null)
+                {
+                    // 十字键优先
+                    if (_gamepad.dpad.down.isPressed) return -1f;
+                    if (_gamepad.dpad.up.isPressed) return 1f;
+
+                    // 摇杆
+                    float stickY = _gamepad.leftStick.y.ReadValue();
+                    return Mathf.Abs(stickY) < _stickDeadzone ? 0f : stickY;
+                }
+
+                if (_keyboard != null)
+                {
+                    float value = 0f;
+                    if (_keyboard.sKey.isPressed || _keyboard.downArrowKey.isPressed) value -= 1f;
+                    if (_keyboard.wKey.isPressed || _keyboard.upArrowKey.isPressed) value += 1f;
+                    return value;
+                }
+
+                return 0f;
+            }
+        }
+
         // 跳跃：手柄 A / 键盘空格
         public bool JumpPressed => ReadPressed(g => g.buttonSouth, k => k.spaceKey);
 
