@@ -16,6 +16,7 @@ namespace DuduAdventure.Player
     /// </remarks>
     [RequireComponent(typeof(PlayerController))]
     [RequireComponent(typeof(PlayerStateMachine))]
+    [DisallowMultipleComponent]
     public class PlayerCombat : MonoBehaviour
     {
         #region Inspector 配置
@@ -88,6 +89,9 @@ namespace DuduAdventure.Player
         private PlayerController _playerController;
         private PlayerStateMachine _playerStateMachine;
 
+        // 本角色专属输入源（与 PlayerController 共用同一个实例）
+        private IPlayerInputSource _input;
+
         #endregion
 
         #region 运行时状态
@@ -151,6 +155,11 @@ namespace DuduAdventure.Player
         {
             _playerController = GetComponent<PlayerController>();
             _playerStateMachine = GetComponent<PlayerStateMachine>();
+
+            // 解析本角色专属输入源。
+            // Resolve 内部先 GetComponent 再兜底 AddComponent，
+            // 所以不管本组件和 PlayerController 谁的 Awake 先执行，拿到的都是同一个实例。
+            _input = PlayerInputSourceResolver.Resolve(gameObject);
         }
 
         private void Update()
@@ -171,14 +180,15 @@ namespace DuduAdventure.Player
         /// </summary>
         private void HandleInput()
         {
-            // 攻击输入（鼠标左键 或 J 键）
-            if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.J))
+            // 具体按哪个键由输入源决定（键盘 J / 手柄 X），
+            // 战斗逻辑只关心"这个玩家本帧想攻击"
+            if (_input.AttackPressed)
             {
                 TryAttack();
             }
 
-            // 冲刺输入（Shift 键 或 K 键）
-            if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.K))
+            // 冲刺（键盘 K、左 Shift / 手柄 B、RB）
+            if (_input.DashPressed)
             {
                 TryDash();
             }

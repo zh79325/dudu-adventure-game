@@ -100,8 +100,15 @@ namespace DuduAdventure.Enemy
         protected int _facingDirection;          // 当前朝向
 
         // 玩家检测
-        protected Transform _playerTransform;    // 玩家位置引用
+        protected Transform _playerTransform;    // 当前锁定的玩家
         private bool _playerInRange;             // 玩家是否在检测范围内
+
+        // 重新选目标的计时器。
+        // 多人合作时目标必须能改：原目标倒地、或另一个玩家凑得更近，都该换人。
+        // 每帧遍历全部玩家没必要，隔一小段时间重选一次就够了，
+        // 而且这点延迟反而让敌人"反应"显得自然，不会像瞄准机器一样瞬间切换。
+        private float _retargetTimer;
+        private const float RetargetInterval = 0.4f;
 
         // 攻击相关
         private float _attackCooldownTimer;
@@ -145,12 +152,8 @@ namespace DuduAdventure.Enemy
                 _healthComponent.OnDeath += HandleDeath;
             }
 
-            // 尝试找到玩家
-            var player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
-            {
-                _playerTransform = player.transform;
-            }
+            // 选定追击目标（最近的活着的玩家）
+            AcquireTarget();
         }
 
         protected virtual void Update()
@@ -381,10 +384,46 @@ namespace DuduAdventure.Enemy
         #region 玩家检测
 
         /// <summary>
+        /// 选定追击目标 - 最近的那个活着的玩家
+        /// </summary>
+        /// <remarks>
+        /// 单人时代这里只需要 FindGameObjectWithTag("Player") 缓存一次。
+        /// 多人合作下这个写法有两个致命问题：
+        /// 1. 永远只盯着第一个被找到的玩家，另外三个人可以贴着敌人脸打而它无反应；
+        /// 2. 那个玩家一死，引用变空，敌人从此变成木头。
+        ///
+        /// 设为 virtual 是为了给特殊怪留口子——比如 Boss 可以改写成"打伤害最高的人"
+        /// 或"锁定唐僧"，而不必复制整套检测逻辑。
+        /// </remarks>
+        protected virtual void AcquireTarget()
+        {
+            var nearest = DuduAdventure.Player.PlayerRegistry.GetNearestPlayer(
+                transform.position, aliveOnly: true);
+
+            if (nearest != null)
+            {
+                _playerTransform = nearest.transform;
+                return;
+            }
+
+            // 兜底：注册表里没人（灰盒调试角色没挂 PlayerIdentity）时按标签找
+            var tagged = GameObject.FindGameObjectWithTag("Player");
+            _playerTransform = tagged != null ? tagged.transform : null;
+        }
+
+        /// <summary>
         /// 检测玩家是否在范围内
         /// </summary>
         protected virtual void DetectPlayer()
         {
+            // 周期性重选目标：目标丢失、目标倒地、或别人凑得更近时都要换人
+            _retargetTimer -= Time.deltaTime;
+            if (_retargetTimer <= 0f || _playerTransform == null)
+            {
+                AcquireTarget();
+                _retargetTimer = RetargetInterval;
+            }
+
             if (_playerTransform == null) return;
 
             float distance = Vector2.Distance(transform.position, _playerTransform.position);

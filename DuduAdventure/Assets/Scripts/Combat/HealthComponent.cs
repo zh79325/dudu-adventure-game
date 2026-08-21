@@ -12,6 +12,7 @@ namespace DuduAdventure.Combat
     /// - 通过事件通知外部系统（UI、音效、特效等）
     /// - 支持无敌帧（I-Frames）机制，避免被连续击中
     /// </remarks>
+    [DisallowMultipleComponent]
     public class HealthComponent : MonoBehaviour
     {
         #region Inspector 配置

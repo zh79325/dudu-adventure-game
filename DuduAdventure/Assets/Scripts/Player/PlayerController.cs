@@ -16,6 +16,11 @@ namespace DuduAdventure.Player
     /// </remarks>
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(PlayerStateMachine))]
+    // 禁止重复挂载：PlayerStateMachine 上也标了 [RequireComponent(typeof(PlayerController))]，
+    // 手动 AddComponent 时 Unity 会先自动补一个默认值的 PlayerController，
+    // 结果同一个角色身上出现两份，而 GetComponent 只会拿到先加的那一个，
+    // 配置全写进了不生效的那一份里 —— 曾经因此排查了很久。
+    [DisallowMultipleComponent]
     public class PlayerController : MonoBehaviour
     {
         #region Inspector 配置
@@ -77,6 +82,10 @@ namespace DuduAdventure.Player
 
         // Sprite 渲染器（用于翻转朝向）
         private SpriteRenderer _spriteRenderer;
+
+        // 这个角色专属的输入源（键盘 或 某一个手柄）
+        // 本地多人的关键：绝不能读全局 Input，否则 4 个角色会一起响应同一个按键
+        private IPlayerInputSource _input;
 
         #endregion
 
@@ -159,6 +168,10 @@ namespace DuduAdventure.Player
             _stateMachine = GetComponent<PlayerStateMachine>();
             _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
+            // 解析本角色的输入源。Prefab 上应预挂 DeviceInputSource；
+            // 手工摆放的调试角色会自动兜底成键盘输入。
+            _input = PlayerInputSourceResolver.Resolve(gameObject);
+
             // 配置刚体
             // 冻结旋转，防止角色被碰撞推倒
             _rigidbody.freezeRotation = true;
@@ -183,8 +196,8 @@ namespace DuduAdventure.Player
         /// </summary>
         private void Update()
         {
-            // 读取水平输入（A/D 或 左/右方向键）
-            _horizontalInput = Input.GetAxisRaw("Horizontal");
+            // 读取水平输入（来自本角色绑定的设备，不是全局键盘）
+            _horizontalInput = _input.Horizontal;
 
             // 处理跳跃输入
             HandleJumpInput();
@@ -271,7 +284,7 @@ namespace DuduAdventure.Player
         private void HandleJumpInput()
         {
             // 检测跳跃键按下
-            if (Input.GetButtonDown("Jump"))
+            if (_input.JumpPressed)
             {
                 // 记录跳跃缓冲时间
                 _jumpBufferTimer = _jumpBufferTime;
@@ -289,7 +302,7 @@ namespace DuduAdventure.Player
             }
 
             // 松开跳跃键时，减少上升速度（实现短按小跳，长按大跳）
-            if (Input.GetButtonUp("Jump") && _rigidbody.linearVelocity.y > 0f)
+            if (_input.JumpReleased && _rigidbody.linearVelocity.y > 0f)
             {
                 // 减少向上的速度
                 Vector2 velocity = _rigidbody.linearVelocity;

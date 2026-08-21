@@ -22,6 +22,7 @@ namespace DuduAdventure.Player
     /// 基于通用 StateMachine 构建，添加了玩家专用的状态和转换规则
     /// </summary>
     [RequireComponent(typeof(PlayerController))]
+    [DisallowMultipleComponent]
     public class PlayerStateMachine : MonoBehaviour
     {
         #region 字段

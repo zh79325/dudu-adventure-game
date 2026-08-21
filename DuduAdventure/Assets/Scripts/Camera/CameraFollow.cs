@@ -12,12 +12,16 @@ namespace DuduAdventure.Camera
     /// - 边界限制防止镜头超出关卡范围
     /// - 屏幕震动增强打击感
     /// </remarks>
+    [DisallowMultipleComponent]
     public class CameraFollow : MonoBehaviour
     {
         #region Inspector 配置
 
         [Header("跟随目标")]
-        [Tooltip("跟随的目标（通常是玩家）")]
+        [Tooltip("自动跟随队长（本地多人时应保持开启）")]
+        [SerializeField] private bool _followCaptain = true;
+
+        [Tooltip("跟随的目标（通常是玩家）。开启跟随队长时会被自动覆盖。")]
         [SerializeField] private Transform _target;
 
         [Header("跟随设置")]
@@ -96,7 +100,42 @@ namespace DuduAdventure.Camera
 
         private void Start()
         {
-            // 如果没有设置目标，尝试自动查找玩家
+            // 解析跟随目标
+            ResolveTarget();
+
+            if (_target == null)
+            {
+                Debug.LogWarning("[CameraFollow] 未找到跟随目标，等待玩家加入或在 Inspector 中设置 Target");
+            }
+
+            // 计算视口半尺寸（用于边界限制）
+            UpdateViewportSize();
+        }
+
+        /// <summary>
+        /// 解析当前应该跟随谁
+        /// </summary>
+        /// <remarks>
+        /// 每帧都调用，而不是只在 Start 里解析一次。原因有三个：
+        /// 1. 玩家是中途按键加入的，开局时名单可能是空的；
+        /// 2. 队长可能中途变更（原队长掉线或倒地）；
+        /// 3. 队长角色被销毁后 _target 会变成空引用，必须及时换人。
+        /// 这里只是读一个静态属性并做引用比较，开销可以忽略。
+        /// </remarks>
+        private void ResolveTarget()
+        {
+            if (_followCaptain)
+            {
+                var captain = DuduAdventure.Player.PlayerRegistry.Captain;
+                if (captain != null)
+                {
+                    _target = captain.transform;
+                    return;
+                }
+            }
+
+            // 兜底：注册表里没人时按标签找。
+            // 灰盒调试场景里的角色没挂 PlayerIdentity，靠这条分支才能跟上。
             if (_target == null)
             {
                 var player = GameObject.FindGameObjectWithTag("Player");
@@ -104,14 +143,7 @@ namespace DuduAdventure.Camera
                 {
                     _target = player.transform;
                 }
-                else
-                {
-                    Debug.LogWarning("[CameraFollow] 未找到跟随目标，请在 Inspector 中设置 Target");
-                }
             }
-
-            // 计算视口半尺寸（用于边界限制）
-            UpdateViewportSize();
         }
 
         /// <summary>
@@ -121,6 +153,9 @@ namespace DuduAdventure.Camera
         /// </summary>
         private void LateUpdate()
         {
+            // 每帧重新解析：玩家中途加入、队长变更、队长被销毁都靠这一步兜住
+            ResolveTarget();
+
             if (_target == null) return;
 
             // 更新视口大小（窗口可能缩放）
