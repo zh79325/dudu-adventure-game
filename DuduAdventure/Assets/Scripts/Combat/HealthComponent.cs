@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using DuduAdventure.Stats;
 
 namespace DuduAdventure.Combat
 {
@@ -88,6 +89,9 @@ namespace DuduAdventure.Combat
         private float _flashTimer;
         private bool _isFlashing;
 
+        // 属性组件引用（用于防御减伤）
+        private CharacterStats _characterStats;
+
         #endregion
 
         #region 公共属性
@@ -130,6 +134,7 @@ namespace DuduAdventure.Combat
         private void Awake()
         {
             _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+            _characterStats = GetComponent<CharacterStats>();
         }
 
         private void Start()
@@ -183,10 +188,19 @@ namespace DuduAdventure.Combat
                 return;
             }
 
-            // 扣除生命值
-            _currentHP = Mathf.Max(0, _currentHP - damage);
+            // 防御减伤：finalDmg = Max(1, rawDmg - defense)
+            int finalDamage = damage;
+            if (_characterStats != null)
+            {
+                int defense = Mathf.RoundToInt(_characterStats.Defense);
+                finalDamage = Mathf.Max(1, damage - defense);
+            }
 
-            Debug.Log($"[HealthComponent] {gameObject.name} 受到 {damage} 点伤害，" +
+            // 扣除生命值
+            _currentHP = Mathf.Max(0, _currentHP - finalDamage);
+
+            Debug.Log($"[HealthComponent] {gameObject.name} 受到 {finalDamage} 点伤害" +
+                      $"（原始 {damage}，防御减免 {damage - finalDamage}），" +
                       $"剩余 HP: {_currentHP}/{_maxHP}");
 
             // 应用击退（衰减后）
@@ -199,8 +213,8 @@ namespace DuduAdventure.Combat
                 }
             }
 
-            // 触发受伤事件
-            OnDamaged?.Invoke(damage, _currentHP, _maxHP, knockback);
+            // 触发受伤事件（传出最终伤害值）
+            OnDamaged?.Invoke(finalDamage, _currentHP, _maxHP, knockback);
 
             // TODO: 播放受击音效
             // TODO: 触发受击特效（粒子、屏幕震动等）

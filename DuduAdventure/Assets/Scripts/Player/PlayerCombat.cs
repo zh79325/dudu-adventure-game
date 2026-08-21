@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DuduAdventure.Stats;
 
 namespace DuduAdventure.Player
 {
@@ -88,6 +89,7 @@ namespace DuduAdventure.Player
 
         private PlayerController _playerController;
         private PlayerStateMachine _playerStateMachine;
+        private CharacterStats _characterStats;
 
         // 本角色专属输入源（与 PlayerController 共用同一个实例）
         private IPlayerInputSource _input;
@@ -155,6 +157,7 @@ namespace DuduAdventure.Player
         {
             _playerController = GetComponent<PlayerController>();
             _playerStateMachine = GetComponent<PlayerStateMachine>();
+            _characterStats = GetComponent<CharacterStats>();
 
             // 解析本角色专属输入源。
             // Resolve 内部先 GetComponent 再兜底 AddComponent，
@@ -283,8 +286,19 @@ namespace DuduAdventure.Player
                 _hitResults
             );
 
-            // 计算最终伤害
-            int finalDamage = Mathf.RoundToInt(_baseDamage * damageMultiplier);
+            // 计算最终伤害：优先从 CharacterStats 读属性（含暴击判定），
+            // 没有 CharacterStats 时退化为原来的 _baseDamage * 倍率
+            int finalDamage;
+            bool isCrit = false;
+            if (_characterStats != null)
+            {
+                (finalDamage, isCrit) = _characterStats.CalculateAttackDamage(damageMultiplier);
+            }
+            else
+            {
+                finalDamage = Mathf.RoundToInt(_baseDamage * damageMultiplier);
+            }
+
             float finalKnockback = 5f * knockbackMultiplier;
 
             // 对每个命中的敌人造成伤害
@@ -305,7 +319,8 @@ namespace DuduAdventure.Player
                     // 造成伤害
                     health.TakeDamage(finalDamage, knockbackDir * finalKnockback);
 
-                    Debug.Log($"[战斗] 命中 {_hitResults[i].name}，造成 {finalDamage} 点伤害");
+                    string critText = isCrit ? " [暴击!]" : "";
+                    Debug.Log($"[战斗] 命中 {_hitResults[i].name}，造成 {finalDamage} 点伤害{critText}");
                 }
 
                 // TODO: 命中特效（火花、屏幕震动）
