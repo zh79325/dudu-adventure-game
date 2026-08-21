@@ -182,7 +182,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5125ecb2eb4524267b3e5c69acde54e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Combat.HealthComponent
-  _maxHP: 100
+  _maxHP: 1
   _startAtFullHP: 1
   _initialHP: 100
   _invincibilityDuration: 1
