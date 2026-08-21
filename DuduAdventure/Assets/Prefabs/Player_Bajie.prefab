@@ -51,6 +51,8 @@ GameObject:
   - component: {fileID: 7238942054755559160}
   - component: {fileID: 4568051736920430458}
   - component: {fileID: 7555109437015770117}
+  - component: {fileID: 7593736055566178711}
+  - component: {fileID: 7138555321428448876}
   m_Layer: 9
   m_Name: Player_Bajie
   m_TagString: Player
@@ -345,6 +347,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Core.DepthSortByY
   _sortPrecision: 100
   _sortOffset: 0
+--- !u!114 &7593736055566178711
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7649244050215804869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ee141e5cf9374be8b2a6f1a73f9ebcc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Stats.CharacterStats
+  _baseMaxHP: 100
+  _baseAttack: 10
+  _baseDefense: 2
+  _baseAttackSpeed: 1
+  _baseMoveSpeed: 1
+  _baseCritRate: 0.05
+  _baseCritDamage: 1.5
+--- !u!114 &7138555321428448876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7649244050215804869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1e23cdaa8ca54a22bf3c59054924136, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Equipment.EquipmentManager
 --- !u!1 &7861761815158082890
 GameObject:
   m_ObjectHideFlags: 0
