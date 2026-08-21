@@ -16,18 +16,34 @@ namespace DuduAdventure.UI
         [SerializeField] private TMPro.TextMeshProUGUI _nameText;
         [SerializeField] private TMPro.TextMeshProUGUI _slotText;
         [SerializeField] private Button _button;
+        [SerializeField] private Button _dropButton;
+        [SerializeField] private Button _salvageButton;
 
         private EquipmentInstance _item;
 
         /// <summary>
-        /// 点击回调
+        /// 点击物品本体（穿戴）
         /// </summary>
         public Action OnClicked { get; set; }
+
+        /// <summary>
+        /// 点击丢弃按钮
+        /// </summary>
+        public Action OnDropClicked { get; set; }
+
+        /// <summary>
+        /// 点击粉碎按钮
+        /// </summary>
+        public Action OnSalvageClicked { get; set; }
 
         private void Awake()
         {
             if (_button != null)
                 _button.onClick.AddListener(() => OnClicked?.Invoke());
+            if (_dropButton != null)
+                _dropButton.onClick.AddListener(() => OnDropClicked?.Invoke());
+            if (_salvageButton != null)
+                _salvageButton.onClick.AddListener(() => OnSalvageClicked?.Invoke());
         }
 
         /// <summary>

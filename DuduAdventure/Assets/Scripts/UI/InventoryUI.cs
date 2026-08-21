@@ -195,6 +195,8 @@ namespace DuduAdventure.UI
                     itemUI.SetItem(item);
                     var capturedItem = item;
                     itemUI.OnClicked = () => OnInventoryItemClicked(capturedItem);
+                    itemUI.OnDropClicked = () => OnInventoryItemDropped(capturedItem);
+                    itemUI.OnSalvageClicked = () => OnInventoryItemSalvaged(capturedItem);
                 }
             }
         }
@@ -225,6 +227,28 @@ namespace DuduAdventure.UI
             {
                 _equipmentManager.Unequip(slot);
                 ShowDetail(item, "已卸下");
+            }
+        }
+
+        /// <summary>
+        /// 点击背包物品的丢弃按钮 → 丢到世界中
+        /// </summary>
+        private void OnInventoryItemDropped(EquipmentInstance item)
+        {
+            if (_equipmentManager == null) return;
+            _equipmentManager.DropToWorld(item);
+            ShowDetail(item, "已丢弃");
+        }
+
+        /// <summary>
+        /// 点击背包物品的粉碎按钮 → 永久销毁
+        /// </summary>
+        private void OnInventoryItemSalvaged(EquipmentInstance item)
+        {
+            if (_equipmentManager == null) return;
+            if (_equipmentManager.Salvage(item))
+            {
+                ShowDetail(item, "已粉碎");
             }
         }
 

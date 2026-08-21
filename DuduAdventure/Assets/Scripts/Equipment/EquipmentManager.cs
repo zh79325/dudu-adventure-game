@@ -6,23 +6,22 @@ using DuduAdventure.Stats;
 namespace DuduAdventure.Equipment
 {
     /// <summary>
-    /// 装备管理器 —— 挂在玩家身上，管理穿戴/卸载/背包
+    /// 装备管理器 —— 挂在玩家身上，管理穿戴/卸载/背包/丢弃/粉碎
     /// </summary>
-    /// <remarks>
-    /// 职责：
-    /// - 管理 6 个装备槽位的当前装备
-    /// - 穿装备时把词条注入 CharacterStats，脱时移除
-    /// - 提供背包（简易列表）
-    /// - 提供拾取接口（掉落物调用）
-    /// 
-    /// MVP 阶段简化：
-    /// - 背包无上限（不做格子系统）
-    /// - 穿装备自动替换旧的（旧的回背包）
-    /// - 不做 UI 绑定（UI 阶段再加）
-    /// </remarks>
     [RequireComponent(typeof(CharacterStats))]
     public class EquipmentManager : MonoBehaviour
     {
+        #region Inspector 配置
+
+        [Header("掉落设置")]
+        [Tooltip("丢弃时生成的 DropPickup Prefab")]
+        [SerializeField] private GameObject _dropPickupPrefab;
+
+        [Tooltip("丢弃物生成的前方偏移距离")]
+        [SerializeField] private float _dropForwardOffset = 1.5f;
+
+        #endregion
+
         #region 事件
 
         /// <summary>
@@ -36,9 +35,21 @@ namespace DuduAdventure.Equipment
         public event Action<EquipmentInstance> OnItemPickedUp;
 
         /// <summary>
-        /// 背包内容变化时触发（拾取/穿戴/卸下都会触发）
+        /// 背包内容变化时触发（拾取/穿戴/卸下/丢弃/粉碎都会触发）
         /// </summary>
         public event Action OnInventoryChanged;
+
+        /// <summary>
+        /// 丢弃装备到地面时触发
+        /// 参数：被丢弃的装备
+        /// </summary>
+        public event Action<EquipmentInstance> OnItemDropped;
+
+        /// <summary>
+        /// 粉碎装备时触发
+        /// 参数：被粉碎的装备
+        /// </summary>
+        public event Action<EquipmentInstance> OnItemSalvaged;
 
         #endregion
 
@@ -127,13 +138,12 @@ namespace DuduAdventure.Equipment
         }
 
         /// <summary>
-        /// 拾取并立即穿上（掉落物的便捷接口）
+        /// 拾取并立即穿上（便捷接口）
         /// </summary>
         public void PickUpAndEquip(EquipmentInstance item)
         {
             if (item == null) return;
 
-            // 先加入背包再穿（Equip 内部会从背包移除）
             _inventory.Add(item);
             Equip(item);
 
@@ -149,16 +159,75 @@ namespace DuduAdventure.Equipment
         }
 
         /// <summary>
-        /// 丢弃背包中的一件装备
+        /// 丢弃装备到地面 - 从背包移除并生成可拾取的地面掉落物
+        /// 其他玩家可以走过去按攻击键捡起来
         /// </summary>
-        public void DiscardFromInventory(EquipmentInstance item)
+        /// <param name="item">要丢弃的装备（必须在背包中）</param>
+        public void DropToWorld(EquipmentInstance item)
         {
             if (item == null) return;
-            if (_inventory.Remove(item))
+
+            if (!_inventory.Remove(item))
             {
-                OnInventoryChanged?.Invoke();
-                Debug.Log($"[EquipmentManager] 丢弃: {item.DisplayName}");
+                Debug.LogWarning($"[EquipmentManager] 无法丢弃：{item.DisplayName} 不在背包中");
+                return;
             }
+
+            // 生成地面掉落物
+            SpawnDropPickup(item);
+
+            OnItemDropped?.Invoke(item);
+            OnInventoryChanged?.Invoke();
+            Debug.Log($"[EquipmentManager] 丢弃到地面: {item.DisplayName}");
+        }
+
+        /// <summary>
+        /// 丢弃已穿戴的装备（先卸下再丢）
+        /// </summary>
+        public void DropEquippedToWorld(EquipmentSlot slot)
+        {
+            if (!_equipped.ContainsKey(slot)) return;
+
+            Unequip(slot);
+            // 卸下后物品已在背包末尾
+            var item = _inventory[_inventory.Count - 1];
+            DropToWorld(item);
+        }
+
+        /// <summary>
+        /// 粉碎装备 - 永久销毁（将来可以返还材料/经验）
+        /// </summary>
+        /// <param name="item">要粉碎的装备（必须在背包中）</param>
+        /// <returns>粉碎是否成功</returns>
+        public bool Salvage(EquipmentInstance item)
+        {
+            if (item == null) return false;
+
+            if (!_inventory.Remove(item))
+            {
+                Debug.LogWarning($"[EquipmentManager] 无法粉碎：{item.DisplayName} 不在背包中");
+                return false;
+            }
+
+            // TODO: 返还材料/经验值
+            // 例如：按稀有度给经验 —— LevelSystem.AddExp(rarityExpTable[item.Rarity])
+
+            OnItemSalvaged?.Invoke(item);
+            OnInventoryChanged?.Invoke();
+            Debug.Log($"[EquipmentManager] 粉碎: {item.DisplayName} ({item.Rarity})");
+            return true;
+        }
+
+        /// <summary>
+        /// 粉碎已穿戴的装备（先卸下再粉碎）
+        /// </summary>
+        public bool SalvageEquipped(EquipmentSlot slot)
+        {
+            if (!_equipped.ContainsKey(slot)) return false;
+
+            Unequip(slot);
+            var item = _inventory[_inventory.Count - 1];
+            return Salvage(item);
         }
 
         #endregion
@@ -168,6 +237,59 @@ namespace DuduAdventure.Equipment
         private void Awake()
         {
             _stats = GetComponent<CharacterStats>();
+        }
+
+        #endregion
+
+        #region 内部方法
+
+        /// <summary>
+        /// 在角色前方生成一个可拾取的掉落物
+        /// </summary>
+        private void SpawnDropPickup(EquipmentInstance equipment)
+        {
+            // 计算生成位置（角色前方）
+            Vector3 spawnPos = transform.position;
+            var playerCtrl = GetComponent<Player.PlayerController>();
+            float facing = playerCtrl != null ? playerCtrl.FacingDirection : 1f;
+            spawnPos.x += facing * _dropForwardOffset;
+            spawnPos.y += 0.5f;
+
+            GameObject dropGO;
+
+            if (_dropPickupPrefab != null)
+            {
+                dropGO = Instantiate(_dropPickupPrefab, spawnPos, Quaternion.identity);
+            }
+            else
+            {
+                // 兜底：动态创建
+                dropGO = new GameObject($"Drop_{equipment.DisplayName}");
+                dropGO.transform.position = spawnPos;
+
+                var sr = dropGO.AddComponent<SpriteRenderer>();
+                sr.sortingOrder = 100;
+                var tex = new Texture2D(8, 8);
+                var pixels = new Color[64];
+                for (int i = 0; i < 64; i++) pixels[i] = Color.white;
+                tex.SetPixels(pixels);
+                tex.Apply();
+                tex.filterMode = FilterMode.Point;
+                sr.sprite = Sprite.Create(tex, new Rect(0, 0, 8, 8), new Vector2(0.5f, 0.5f), 16f);
+
+                var col = dropGO.AddComponent<CircleCollider2D>();
+                col.radius = 0.8f;
+                col.isTrigger = true;
+
+                dropGO.AddComponent<DropPickup>();
+            }
+
+            // 注入装备数据
+            var pickup = dropGO.GetComponent<DropPickup>();
+            if (pickup != null)
+            {
+                pickup.Init(equipment);
+            }
         }
 
         #endregion
