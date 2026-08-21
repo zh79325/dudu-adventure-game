@@ -54,6 +54,34 @@ namespace DuduAdventure.UI
             _huds = new PlayerHUD[_maxHUDs];
         }
 
+        private void OnEnable()
+        {
+            PlayerRegistry.OnPlayerJoined += OnPlayerJoined;
+            PlayerRegistry.OnPlayerLeft += OnPlayerLeft;
+
+            // 对已经在场的玩家补注册
+            foreach (var p in PlayerRegistry.Players)
+            {
+                if (p != null) OnPlayerJoined(p);
+            }
+        }
+
+        private void OnDisable()
+        {
+            PlayerRegistry.OnPlayerJoined -= OnPlayerJoined;
+            PlayerRegistry.OnPlayerLeft -= OnPlayerLeft;
+        }
+
+        private void OnPlayerJoined(PlayerIdentity player)
+        {
+            RegisterPlayer(player.gameObject);
+        }
+
+        private void OnPlayerLeft(PlayerIdentity player)
+        {
+            UnregisterPlayer(player.gameObject);
+        }
+
         #endregion
 
         #region 公共方法

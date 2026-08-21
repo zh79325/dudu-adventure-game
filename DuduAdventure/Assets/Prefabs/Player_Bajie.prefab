@@ -53,6 +53,10 @@ GameObject:
   - component: {fileID: 7555109437015770117}
   - component: {fileID: 7593736055566178711}
   - component: {fileID: 7138555321428448876}
+  - component: {fileID: 1229818848635367358}
+  - component: {fileID: -1711814370366315057}
+  - component: {fileID: -3179492283613331269}
+  - component: {fileID: 5910501687518444346}
   m_Layer: 9
   m_Name: Player_Bajie
   m_TagString: Player
@@ -378,6 +382,79 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1e23cdaa8ca54a22bf3c59054924136, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Equipment.EquipmentManager
+  _dropPickupPrefab: {fileID: 0}
+  _dropForwardOffset: 1.5
+--- !u!114 &1229818848635367358
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7649244050215804869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab736c6d1be0145bdb7c334522269934, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Stats.ResourceComponent
+  _resourceType: 0
+  _maxValue: 100
+  _initialValue: -1
+  _regenPerSecond: 5
+  _regenDelay: 3
+--- !u!114 &-1711814370366315057
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7649244050215804869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab736c6d1be0145bdb7c334522269934, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Stats.ResourceComponent
+  _resourceType: 1
+  _maxValue: 100
+  _initialValue: 0
+  _regenPerSecond: 0
+  _regenDelay: 0
+--- !u!114 &-3179492283613331269
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7649244050215804869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef188cfd145684eaaa6b8613a6cf43fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Stats.LevelSystem
+  _startLevel: 1
+  _maxLevel: 30
+  _baseExpToLevel: 100
+  _expExponent: 1.5
+  _attackPerLevel: 2
+  _defensePerLevel: 1
+  _maxHPPerLevel: 15
+  _maxManaPerLevel: 8
+  _skillUnlocks: []
+--- !u!114 &5910501687518444346
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7649244050215804869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84318835926324cd5930aba8ef72e915, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Stats.RageAccumulator
+  _ragePerHit: 5
+  _comboRageBonus: 2
+  _ragePerDamageTaken: 0.3
+  _minRageOnHit: 3
 --- !u!1 &7861761815158082890
 GameObject:
   m_ObjectHideFlags: 0
