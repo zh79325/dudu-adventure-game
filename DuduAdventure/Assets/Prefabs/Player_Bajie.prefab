@@ -57,6 +57,7 @@ GameObject:
   - component: {fileID: -1711814370366315057}
   - component: {fileID: -3179492283613331269}
   - component: {fileID: 5910501687518444346}
+  - component: {fileID: 3555502274909376228}
   m_Layer: 9
   m_Name: Player_Bajie
   m_TagString: Player
@@ -455,6 +456,30 @@ MonoBehaviour:
   _comboRageBonus: 2
   _ragePerDamageTaken: 0.3
   _minRageOnHit: 3
+--- !u!114 &3555502274909376228
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7649244050215804869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00c4310a304ae4019a7c822c7e6d385b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Skill.SkillManager
+  _equippedSkills:
+  - {fileID: 11400000, guid: 5d9fba9dd15da485daaeeab75e8037f0, type: 2}
+  - {fileID: 11400000, guid: d2c78533b063c43b5b0d3896bb017848, type: 2}
+  - {fileID: 11400000, guid: 4fce9adac782d448b9844785df3ab78b, type: 2}
+  - {fileID: 11400000, guid: efbf172912ffc407183528353d6a6783, type: 2}
+  _skill1Key: 117
+  _skill2Key: 105
+  _skill3Key: 111
+  _ultimateKey: 112
+  _enemyLayer:
+    serializedVersion: 2
+    m_Bits: 1024
 --- !u!1 &7861761815158082890
 GameObject:
   m_ObjectHideFlags: 0

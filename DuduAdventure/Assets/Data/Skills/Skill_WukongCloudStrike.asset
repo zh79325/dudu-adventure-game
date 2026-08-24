@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 082004ddf73b548739e2cfbb741847ac, type: 3}
+  m_Name: Skill_WukongCloudStrike
+  m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Skill.SkillDefinition
+  SkillId: wukong_cloudstrike
+  DisplayName: "\u7B4B\u6597\u4E91\u51B2"
+  Description: "\u9A7E\u7B4B\u6597\u4E91\u5411\u524D\u51B2\u523A\uFF0C\u7A7F\u900F\u5E76\u4F24\u5BB3\u8DEF\u5F84\u4E0A\u7684\u654C\u4EBA"
+  Icon: {fileID: 0}
+  CostType: 0
+  ManaCost: 25
+  Cooldown: 6
+  DamageMultiplier: 3
+  HitCount: 1
+  HitInterval: 0
+  EffectType: 1
+  EffectRadius: 1
+  EffectDistance: 6
+  EffectDuration: 0.5
+  KnockbackForce: 8
+  CastTime: 0.15
+  RecoveryTime: 0.3
+  LockFacing: 1
+  InvincibleDuringCast: 1
+  UnlockLevel: 3

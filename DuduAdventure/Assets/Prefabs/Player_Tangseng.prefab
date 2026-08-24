@@ -26,6 +26,7 @@ GameObject:
   - component: {fileID: -6209393741398020901}
   - component: {fileID: 6828898455530294299}
   - component: {fileID: -2981438563079899063}
+  - component: {fileID: 3981739842399828994}
   m_Layer: 9
   m_Name: Player_Tangseng
   m_TagString: Player
@@ -424,6 +425,30 @@ MonoBehaviour:
   _comboRageBonus: 2
   _ragePerDamageTaken: 0.3
   _minRageOnHit: 3
+--- !u!114 &3981739842399828994
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 197004529156047667}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00c4310a304ae4019a7c822c7e6d385b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Skill.SkillManager
+  _equippedSkills:
+  - {fileID: 11400000, guid: 5d9fba9dd15da485daaeeab75e8037f0, type: 2}
+  - {fileID: 11400000, guid: d2c78533b063c43b5b0d3896bb017848, type: 2}
+  - {fileID: 11400000, guid: 4fce9adac782d448b9844785df3ab78b, type: 2}
+  - {fileID: 11400000, guid: efbf172912ffc407183528353d6a6783, type: 2}
+  _skill1Key: 117
+  _skill2Key: 105
+  _skill3Key: 111
+  _ultimateKey: 112
+  _enemyLayer:
+    serializedVersion: 2
+    m_Bits: 1024
 --- !u!1 &2278526735363965621
 GameObject:
   m_ObjectHideFlags: 0

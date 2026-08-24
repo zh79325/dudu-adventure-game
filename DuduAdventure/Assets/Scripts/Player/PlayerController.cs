@@ -93,6 +93,9 @@ namespace DuduAdventure.Player
         // 朝向
         private int _facingDirection = 1;
 
+        // 移动锁定（技能施法时）
+        private bool _movementLocked;
+
         #endregion
 
         #region 公共属性
@@ -147,8 +150,16 @@ namespace DuduAdventure.Player
 
         private void Update()
         {
-            _horizontalInput = _input.Horizontal;
-            _verticalInput = _input.Vertical;
+            if (_movementLocked)
+            {
+                _horizontalInput = 0f;
+                _verticalInput = 0f;
+            }
+            else
+            {
+                _horizontalInput = _input.Horizontal;
+                _verticalInput = _input.Vertical;
+            }
 
             HandleJumpInput();
             UpdateFacingDirection();
@@ -287,6 +298,21 @@ namespace DuduAdventure.Player
         {
             enabled = true;
         }
+
+        /// <summary>
+        /// 锁定/解锁移动输入（技能施法时使用，物理仍然运行）
+        /// </summary>
+        public void SetMovementLocked(bool locked)
+        {
+            _movementLocked = locked;
+            if (locked)
+            {
+                _currentHorizontalSpeed = 0f;
+            }
+        }
+
+        /// <summary>是否被锁定移动</summary>
+        public bool IsMovementLocked => _movementLocked;
 
         /// <summary>
         /// 直接设置地面 Y（传送时使用，避免跳跃残留）
