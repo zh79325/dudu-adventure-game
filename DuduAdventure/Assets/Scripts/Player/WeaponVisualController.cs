@@ -47,18 +47,21 @@ namespace DuduAdventure.Player
 
         [Header("武器挂载 - 空闲")]
         // v3 sprite (280×343, baseline y=331, PPU=175) 前手（viewer's right）大约在 pixel (200, 240)，
-        // 对应角色本地 world (0.34, -0.39)。取 (0.30, -0.30) 让 pivot（棒身 grip 端）落在拳心稍上、略向前，
-        // 既贴住手，又让棒身底部略微伸到手下方，避免看起来"漂浮"。
+        // 对应角色本地 world (0.34, -0.39)。取 (0.34, -0.28) 让 pivot 落在拳心稍上、贴住手心，
+        // 配合 -22° 的斜靠角度，让棒身从拳心一路伸向右后上方、完全在角色轮廓之外，避免穿过身体或脸。
         [Tooltip("空闲时武器握把相对角色中心的偏移（面向右时）")]
-        [SerializeField] private Vector2 _weaponOffset = new Vector2(0.30f, -0.30f);
+        [SerializeField] private Vector2 _weaponOffset = new Vector2(0.34f, -0.28f);
 
         [Tooltip("空闲时武器的旋转角（度，0=竖直向上，正=逆时针）")]
-        // 参考「英雄横挎金箍棒」的 chibi 立绘：棒身斜挎过身、棒尖翘到背后头肩之上。
-        // 角色面朝右时背侧在 viewer's 左，正值 CCW 让棒尖偏左上；+45 让棒身接近对角斜挎。
-        [SerializeField] private float _idleAngle = 45f;
+        // -22°：棒尖朝右上（顺时针轻微后倾），像"提着长兵器待命"的横版动作游戏惯例姿态；
+        // 棒身完全落在人物右外侧，握把与手部对齐，避免任何遮挡身体/脸部的问题。
+        [SerializeField] private float _idleAngle = -22f;
 
-        [Tooltip("武器精灵的排序层级（相对角色）")]
+        [Tooltip("攻击时武器的排序层级（相对角色）—— 让劈砍露在角色前面")]
         [SerializeField] private int _sortingOrderOffset = 1;
+
+        [Tooltip("Idle/Run 时武器的排序层级（相对角色）—— 与攻击一致取 +1，让整根棒身画在角色前面，握把清晰落在拳心")]
+        [SerializeField] private int _idleSortingOrderOffset = 1;
 
         [Header("攻击关键帧")]
         [Tooltip("攻击时按进度分段线性插值的姿势关键帧。至少 2 帧，建议 3~4 帧对应帧序列的 Atk1/2/3。")]
@@ -144,11 +147,14 @@ namespace DuduAdventure.Player
 
             Vector2 offset;
             float angle;
+            // Attack 时武器要露在角色前面才能看到劈砍；Idle/Run/Jump 时排在身后，让身体遮住棒身中段，只露握把和棒尖
+            int sortingDelta = _idleSortingOrderOffset;
 
             switch (state)
             {
                 case PlayerState.Attack:
                     SampleAttackPose(_stateMachine.AttackProgress, out offset, out angle);
+                    sortingDelta = _sortingOrderOffset;
                     break;
 
                 case PlayerState.Run:
@@ -171,7 +177,14 @@ namespace DuduAdventure.Player
 
             ApplyPose(offset, angle, facingLeft);
 
-            if (_weaponSR != null) _weaponSR.flipX = facingLeft;
+            if (_weaponSR != null)
+            {
+                _weaponSR.flipX = facingLeft;
+                if (_characterSR != null)
+                {
+                    _weaponSR.sortingOrder = _characterSR.sortingOrder + sortingDelta;
+                }
+            }
         }
 
         #endregion
