@@ -19,3 +19,13 @@
 - 命名空间: `DuduAdventure.*`（Player、Enemy、Combat、Core、Camera 等）
 - 注意 `DuduAdventure.Camera` 命名空间的存在，在 DuduAdventure.* 下裸写 `Camera` 会被解析成命名空间，必须写 `UnityEngine.Camera`
 - 同理 `Input` 在 `DuduAdventure.Player.Input` 命名空间下需写 `UnityEngine.Input`
+
+### 美术资产
+
+四个玩家角色（悟空 / 八戒 / 沙僧 / 唐僧）的美术生产**严格**按 `docs/CHARACTER_ART_PIPELINE.md` 走，不允许绕过：
+
+- ImageGen prompt 模板、帧清单（每角色 18 帧）、武器独立生成规则都在文档里定死。
+- 抠图/切帧唯一入口是 `tools/build_character_frames.py`，不要手动 PIL 处理。
+- Unity 导入设置（PPU、Single、Center 轴心、Bilinear + mipmaps、FullRect、Uncompressed）和 Prefab 接线清单也在文档里，脚本化改，不要手拖。
+- **一次只做一个角色**：上一个角色未经用户在游戏里确认之前，不要开始下一个角色。
+- 悟空已跑通并作为参考实现（提交 `0535eaf`）；八戒/沙僧/唐僧照抄流程，只允许调整角色设计描述（Character Design Clause）。
