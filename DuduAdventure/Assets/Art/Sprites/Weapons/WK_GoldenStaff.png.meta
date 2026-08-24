@@ -1,19 +1,10 @@
 fileFormatVersion: 2
-guid: ce854fd1eaa304f58bf4e1865c41c75e
+guid: 44e5cfd86230940fcb8b9a0b82af9b27
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -2231775942957852733
-    second: Weapon_GoldenStaff_0
-  - first:
-      213: -850403658753124558
-    second: Weapon_GoldenStaff_1
-  - first:
-      213: 947834938659420454
-    second: Weapon_GoldenStaff_2
-  - first:
-      213: -8441133478755325808
-    second: Weapon_GoldenStaff_3
+      213: 6845308536832093981
+    second: WK_GoldenStaff_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -58,9 +49,9 @@ TextureImporter:
   spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 0
-  alignment: 7
+  alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 175
+  spritePixelsToUnits: 660
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -109,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Weapon_GoldenStaff_0
+      name: WK_GoldenStaff_0
       rect:
         serializedVersion: 2
-        x: 119
-        y: 930
-        width: 32
-        height: 15
+        x: 0
+        y: 0
+        width: 91
+        height: 1065
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -124,74 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3c71cb5ba932701e0800000000000000
-      internalID: -2231775942957852733
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Weapon_GoldenStaff_1
-      rect:
-        serializedVersion: 2
-        x: 12
-        y: 4
-        width: 205
-        height: 918
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 237d354c062c234f0800000000000000
-      internalID: -850403658753124558
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Weapon_GoldenStaff_2
-      rect:
-        serializedVersion: 2
-        x: 223
-        y: 675
-        width: 7
-        height: 15
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 629bf78dad2672d00800000000000000
-      internalID: 947834938659420454
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Weapon_GoldenStaff_3
-      rect:
-        serializedVersion: 2
-        x: 4
-        y: 288
-        width: 16
-        height: 30
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 098a129f2d11bda80800000000000000
-      internalID: -8441133478755325808
+      spriteID: d1f63d3a8db6ffe50800000000000000
+      internalID: 6845308536832093981
       vertices: []
       indices: 
       edges: []
@@ -210,10 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Weapon_GoldenStaff_0: -2231775942957852733
-      Weapon_GoldenStaff_1: -850403658753124558
-      Weapon_GoldenStaff_2: 947834938659420454
-      Weapon_GoldenStaff_3: -8441133478755325808
+      WK_GoldenStaff_0: 6845308536832093981
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

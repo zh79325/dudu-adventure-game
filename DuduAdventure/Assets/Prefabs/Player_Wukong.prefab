@@ -167,8 +167,8 @@ SpriteRenderer:
   m_SortingLayer: 5
   m_SortingOrder: 150
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: a6e3f4ebc65a34c249f3d8aa24494b58, type: 3}
-  m_Color: {r: 1, g: 0.75, b: 0.3, a: 1}
+  m_Sprite: {fileID: 21300000, guid: 5b110025dc2ec489790550bf6bec6678, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -243,7 +243,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1.0292969, y: 1.8574219}
+    oldSize: {x: 1.3371428, y: 1.9942857}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -557,16 +557,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ae569f963b5c4d6e8ca77dbeaa71004, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Player.WeaponVisualController
-  _weaponOffset: {x: 0.4, y: 0.1}
-  _idleAngle: -30
+  _weaponOffset: {x: 0.34, y: -0.25}
+  _idleAngle: -25
   _sortingOrderOffset: 1
-  _attackStartAngle: 60
-  _attackEndAngle: -120
-  _attackDuration: 0.35
-  _walkSwayAmplitude: 15
+  _attackStartAngle: 55
+  _attackEndAngle: -115
+  _attackDuration: 0.28
+  _walkSwayAmplitude: 10
   _walkSwaySpeed: 8
-  _weaponScale: 1.5
-  _defaultWeaponSprite: {fileID: -2231775942957852733, guid: ce854fd1eaa304f58bf4e1865c41c75e, type: 3}
+  _weaponScale: 1
+  _defaultWeaponSprite: {fileID: 21300000, guid: 44e5cfd86230940fcb8b9a0b82af9b27, type: 3}
 --- !u!114 &9085219308001101370
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -579,11 +579,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3660685c936647acb9308bbb96fef14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Player.FrameSpriteAnimator
-  _idleSprite: {fileID: 21300000, guid: a6e3f4ebc65a34c249f3d8aa24494b58, type: 3}
-  _walkFrame1: {fileID: 5323654756511604132, guid: 00744e58a254b4551b39840922893919, type: 3}
-  _walkFrame2: {fileID: -294590091216889289, guid: ea5ea7ee16ca644aa88749b82cfb0f08, type: 3}
-  _attackSprite: {fileID: -5914323137395549034, guid: c00e5c71cc51146fd8d6727f538b6607, type: 3}
-  _walkFPS: 6
+  _idleSprite: {fileID: 21300000, guid: 5b110025dc2ec489790550bf6bec6678, type: 3}
+  _walkFrames:
+  - {fileID: 21300000, guid: a5e6f869e73804435b647f98db704514, type: 3}
+  - {fileID: 21300000, guid: 27bf9c2838eba4e589c40f625dda756c, type: 3}
+  - {fileID: 21300000, guid: 2ce60ee9392d146869105c0f78abf7d6, type: 3}
+  - {fileID: 21300000, guid: 08b997f6b1a134dfcb039ff505944b6c, type: 3}
+  _attackFrames:
+  - {fileID: 21300000, guid: 3033336c9e3594183886cccaac40923c, type: 3}
+  - {fileID: 21300000, guid: f8bcdac2a77f7451a9a9aabedc7ba339, type: 3}
+  - {fileID: 21300000, guid: 378633c7adee042e1a9fe327b0837370, type: 3}
+  _jumpSprite: {fileID: 21300000, guid: 27bf9c2838eba4e589c40f625dda756c, type: 3}
+  _walkFPS: 10
 --- !u!114 &4508539811764389637
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -616,7 +623,7 @@ MonoBehaviour:
   _shadowSprite: {fileID: 21300000, guid: ac84a590964af4f6f8c8a259d32f7c84, type: 3}
   _alpha: 0.5
   _worldSize: {x: 1, y: 0.3}
-  _footOffset: {x: 0, y: 0.02}
+  _footOffset: {x: 0, y: 0.067}
   _autoFit: 1
   _autoWidthRatio: 0.8
   _autoFlatten: 0.3

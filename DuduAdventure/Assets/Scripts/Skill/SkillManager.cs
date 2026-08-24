@@ -73,6 +73,7 @@ namespace DuduAdventure.Skill
         private ResourceComponent _rage;
         private PlayerController _playerController;
         private LevelSystem _levelSystem;
+        private PlayerStateMachine _stateMachine;
 
         // 每个槽位的冷却剩余时间
         private readonly float[] _cooldownTimers = new float[4];
@@ -91,6 +92,9 @@ namespace DuduAdventure.Skill
 
         /// <summary>是否正在施法</summary>
         public bool IsCasting => _isCasting;
+
+        /// <summary>当前正在释放的技能（未施法时为 null）——供帧动画取施法姿势帧</summary>
+        public SkillDefinition CurrentSkill { get; private set; }
 
         /// <summary>获取指定槽位的技能定义（可能为 null）</summary>
         public SkillDefinition GetSkill(SkillSlot slot) =>
@@ -116,6 +120,7 @@ namespace DuduAdventure.Skill
             _characterStats = GetComponent<CharacterStats>();
             _playerController = GetComponent<PlayerController>();
             _levelSystem = GetComponent<LevelSystem>();
+            _stateMachine = GetComponent<PlayerStateMachine>();
 
             // 找蓝量和怒气
             var resources = GetComponents<ResourceComponent>();
@@ -192,6 +197,13 @@ namespace DuduAdventure.Skill
         private IEnumerator CastRoutine(SkillSlot slot, SkillDefinition skill)
         {
             _isCasting = true;
+            CurrentSkill = skill;
+
+            // 切入施法状态（驱动帧动画播放技能姿势）
+            if (_stateMachine != null)
+            {
+                _stateMachine.TriggerCast(skill.TotalCastDuration);
+            }
 
             // 锁定朝向
             if (skill.LockFacing && _playerController != null)
@@ -229,6 +241,7 @@ namespace DuduAdventure.Skill
 
             // 施法结束
             _isCasting = false;
+            CurrentSkill = null;
 
             if (skill.LockFacing && _playerController != null)
             {
@@ -481,6 +494,7 @@ namespace DuduAdventure.Skill
             {
                 StopCoroutine(_castCoroutine);
                 _isCasting = false;
+                CurrentSkill = null;
                 if (_playerController != null)
                     _playerController.SetMovementLocked(false);
             }

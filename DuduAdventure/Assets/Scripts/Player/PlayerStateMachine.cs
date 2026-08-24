@@ -13,7 +13,8 @@ namespace DuduAdventure.Player
         Jump,       // 腾空（上升 + 下落统一为一个状态）
         Attack,     // 攻击
         Hit,        // 受击
-        Transform   // 大招（预留）
+        Transform,  // 大招（预留）
+        Cast        // 释放技能（由 SkillManager 驱动）
     }
 
     /// <summary>
@@ -44,6 +45,24 @@ namespace DuduAdventure.Player
         private float _attackLockTimer;
         private const float AttackLockDuration = 0.4f;
 
+        /// <summary>
+        /// 攻击进度 0~1（供帧动画选帧用）
+        /// </summary>
+        public float AttackProgress =>
+            AttackLockDuration <= 0f ? 1f : Mathf.Clamp01(1f - _attackLockTimer / AttackLockDuration);
+
+        /// <summary>
+        /// 施法锁定计时器 - 由 SkillManager 通过 TriggerCast 设置
+        /// </summary>
+        private float _castLockTimer;
+        private float _castDuration;
+
+        /// <summary>
+        /// 施法进度 0~1（供帧动画选帧用）
+        /// </summary>
+        public float CastProgress =>
+            _castDuration <= 0f ? 1f : Mathf.Clamp01(1f - _castLockTimer / _castDuration);
+
         #endregion
 
         #region 生命周期
@@ -62,6 +81,9 @@ namespace DuduAdventure.Player
         {
             if (_attackLockTimer > 0f)
                 _attackLockTimer -= Time.deltaTime;
+
+            if (_castLockTimer > 0f)
+                _castLockTimer -= Time.deltaTime;
 
             _stateMachine?.Update();
         }
@@ -86,6 +108,7 @@ namespace DuduAdventure.Player
             _stateMachine.AddState("Attack", new AttackState(this));
             _stateMachine.AddState("Hit", new HitState(this));
             _stateMachine.AddState("Transform", new TransformState(this));
+            _stateMachine.AddState("Cast", new CastState(this));
 
             // 状态转换规则（DNF 式）
             // Idle -> Run：地面上有移动输入
@@ -108,6 +131,11 @@ namespace DuduAdventure.Player
             _stateMachine.AddTransition("Attack", "Run", ctx => _attackLockTimer <= 0f && ctx.IsMoving && ctx.IsGrounded);
             _stateMachine.AddTransition("Attack", "Jump", ctx => _attackLockTimer <= 0f && !ctx.IsGrounded);
 
+            // Cast -> 施法结束后回到对应状态
+            _stateMachine.AddTransition("Cast", "Idle", ctx => _castLockTimer <= 0f && !ctx.IsMoving && ctx.IsGrounded);
+            _stateMachine.AddTransition("Cast", "Run", ctx => _castLockTimer <= 0f && ctx.IsMoving && ctx.IsGrounded);
+            _stateMachine.AddTransition("Cast", "Jump", ctx => _castLockTimer <= 0f && !ctx.IsGrounded);
+
             // Hit -> 恢复
             _stateMachine.AddTransition("Hit", "Idle", ctx => ctx.IsGrounded && !_isStunned);
             _stateMachine.AddTransition("Hit", "Jump", ctx => !ctx.IsGrounded && !_isStunned);
@@ -125,6 +153,18 @@ namespace DuduAdventure.Player
             _attackLockTimer = AttackLockDuration;
             _stateMachine.ForceTransition("Attack");
             CurrentState = PlayerState.Attack;
+        }
+
+        /// <summary>
+        /// 触发施法状态（由 SkillManager 调用）
+        /// </summary>
+        /// <param name="duration">整段施法总时长 = CastTime + (HitCount-1)*HitInterval + RecoveryTime</param>
+        public void TriggerCast(float duration)
+        {
+            _castDuration = Mathf.Max(0.01f, duration);
+            _castLockTimer = _castDuration;
+            _stateMachine.ForceTransition("Cast");
+            CurrentState = PlayerState.Cast;
         }
 
         public void TriggerHit()
@@ -237,6 +277,20 @@ namespace DuduAdventure.Player
             {
                 _owner.EndStun();
             }
+        }
+
+        /// <summary>
+        /// 施法状态（由 SkillManager 触发，持续时间由 TriggerCast 传入）
+        /// </summary>
+        public class CastState : IState<PlayerController>
+        {
+            private readonly PlayerStateMachine _owner;
+            public CastState(PlayerStateMachine owner) { _owner = owner; }
+
+            public void Enter(PlayerController ctx) { _owner.CurrentState = PlayerState.Cast; }
+            public void Update(PlayerController ctx) { }
+            public void FixedUpdate(PlayerController ctx) { }
+            public void Exit(PlayerController ctx) { }
         }
 
         public class TransformState : IState<PlayerController>

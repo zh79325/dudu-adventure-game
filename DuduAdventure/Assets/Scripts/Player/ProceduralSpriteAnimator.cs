@@ -36,7 +36,8 @@ namespace DuduAdventure.Player
         [SerializeField] private float _landSquashDuration = 0.15f;
 
         [Header("攻击动画 (Attack)")]
-        [SerializeField] private float _attackPunchScale = 1.2f;
+        [Tooltip("攻击瞬间的整体缩放冲击。形变主要由攻击美术帧承担，这里只保留轻微力量感")]
+        [SerializeField] private float _attackPunchScale = 1.05f;
         [SerializeField] private float _attackPunchDuration = 0.12f;
 
         [Header("受击动画 (Hit)")]

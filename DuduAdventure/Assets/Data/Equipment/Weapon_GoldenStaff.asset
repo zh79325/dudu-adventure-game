@@ -15,6 +15,7 @@ MonoBehaviour:
   DisplayName: "\u5982\u610F\u91D1\u7B8D\u68D2\xB7\u8BD5\u70BC"
   Description: "\u82B1\u679C\u5C71\u6C34\u5E18\u6D1E\u91CC\u7684\u795E\u5175\uFF0C\u643A\u5E26\u5F3A\u529B\u8BCD\u6761"
   Icon: {fileID: 0}
+  WeaponSprite: {fileID: 21300000, guid: 44e5cfd86230940fcb8b9a0b82af9b27, type: 3}
   Slot: 0
   Rarity: 4
   PossibleAffixes:

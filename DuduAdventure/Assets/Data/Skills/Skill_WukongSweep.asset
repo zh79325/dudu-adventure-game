@@ -31,4 +31,7 @@ MonoBehaviour:
   RecoveryTime: 0.2
   LockFacing: 1
   InvincibleDuringCast: 0
+  CastFrames:
+  - {fileID: 21300000, guid: cfa36257db495444594ab8a066538167, type: 3}
+  - {fileID: 21300000, guid: 30cf92f2e0392481e99c4e2e2366c037, type: 3}
   UnlockLevel: 1

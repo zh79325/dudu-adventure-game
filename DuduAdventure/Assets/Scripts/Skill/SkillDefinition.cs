@@ -114,6 +114,15 @@ namespace DuduAdventure.Skill
         [Tooltip("施法时是否无敌")]
         public bool InvincibleDuringCast;
 
+        [Tooltip("施法姿势帧序列（按施法进度均分播放；留空则回退到普攻帧）")]
+        public Sprite[] CastFrames;
+
+        /// <summary>
+        /// 整段施法总时长 = 前摇 + 多段间隔 + 后摇
+        /// </summary>
+        public float TotalCastDuration =>
+            CastTime + Mathf.Max(0, HitCount - 1) * HitInterval + RecoveryTime;
+
         #endregion
 
         #region 解锁条件
