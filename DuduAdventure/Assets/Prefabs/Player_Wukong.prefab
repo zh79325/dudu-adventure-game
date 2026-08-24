@@ -91,6 +91,7 @@ GameObject:
   - component: {fileID: 2185866529714462957}
   - component: {fileID: 7192906197986432005}
   - component: {fileID: 1656219693611425726}
+  - component: {fileID: 9085219308001101370}
   m_Layer: 9
   m_Name: Player_Wukong
   m_TagString: Player
@@ -240,7 +241,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 2.9101562, y: 3.25}
+    oldSize: {x: 1.0292969, y: 1.8574219}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -563,3 +564,19 @@ MonoBehaviour:
   _walkSwayAmplitude: 15
   _walkSwaySpeed: 8
   _defaultWeaponSprite: {fileID: -2231775942957852733, guid: ce854fd1eaa304f58bf4e1865c41c75e, type: 3}
+--- !u!114 &9085219308001101370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6091368674919041110}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3660685c936647acb9308bbb96fef14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Player.FrameSpriteAnimator
+  _idleSprite: {fileID: 21300000, guid: a6e3f4ebc65a34c249f3d8aa24494b58, type: 3}
+  _walkFrame1: {fileID: 5323654756511604132, guid: 00744e58a254b4551b39840922893919, type: 3}
+  _walkFrame2: {fileID: -294590091216889289, guid: ea5ea7ee16ca644aa88749b82cfb0f08, type: 3}
+  _walkFPS: 6

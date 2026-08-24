@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: ccfd0e55985f14d46896ee811bd1e3f2
+guid: 00744e58a254b4551b39840922893919
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6153779042636611521
-    second: Tangseng_Idle_0
+      213: 5323654756511604132
+    second: Wukong_Walk1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Tangseng_Idle_0
+      name: Wukong_Walk1_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 1024
-        height: 1024
+        width: 628
+        height: 921
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: f30c6699092699aa0800000000000000
-      internalID: -6153779042636611521
+      spriteID: 4ad51bc8bcb61e940800000000000000
+      internalID: 5323654756511604132
       vertices: []
       indices: 
       edges: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Tangseng_Idle_0: -6153779042636611521
+      Wukong_Walk1_0: 5323654756511604132
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
