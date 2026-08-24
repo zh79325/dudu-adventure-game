@@ -557,12 +557,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ae569f963b5c4d6e8ca77dbeaa71004, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Player.WeaponVisualController
-  _weaponOffset: {x: 0.34, y: -0.25}
-  _idleAngle: -25
+  _weaponOffset: {x: 0.15, y: 0.15}
+  _idleAngle: 25
   _sortingOrderOffset: 1
-  _attackStartAngle: 55
-  _attackEndAngle: -115
-  _attackDuration: 0.28
+  _attackPoses:
+  - Offset: {x: 0.15, y: 0.55}
+    Rotation: 30
+  - Offset: {x: 0.4, y: 0.2}
+    Rotation: -75
+  - Offset: {x: 0.35, y: -0.15}
+    Rotation: -140
   _walkSwayAmplitude: 10
   _walkSwaySpeed: 8
   _weaponScale: 1
