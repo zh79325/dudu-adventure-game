@@ -141,6 +141,15 @@ namespace DuduAdventure.Player
             _weaponSR = _weaponGO.AddComponent<SpriteRenderer>();
             _weaponSR.sortingOrder = (_characterSR != null ? _characterSR.sortingOrder : 10) + _sortingOrderOffset;
 
+            // 必须继承角色的 Sorting Layer 和材质：
+            // 新建的 SpriteRenderer 默认落在 "Default" 层、并套上 URP 的 Sprite-Lit-Default，
+            // 前者会让武器被地面盖掉，后者在无光照场景里会渲染成纯黑块。
+            if (_characterSR != null)
+            {
+                _weaponSR.sortingLayerID = _characterSR.sortingLayerID;
+                _weaponSR.sharedMaterial = _characterSR.sharedMaterial;
+            }
+
             _weaponTransform = _weaponGO.transform;
 
             // 设置初始精灵

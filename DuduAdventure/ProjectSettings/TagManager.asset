@@ -46,6 +46,30 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Sky
+    uniqueID: 100
+    locked: 0
+  - name: FarBackground
+    uniqueID: 101
+    locked: 0
+  - name: BackWall
+    uniqueID: 102
+    locked: 0
+  - name: Ground
+    uniqueID: 103
+    locked: 0
+  - name: Gameplay
+    uniqueID: 104
+    locked: 0
+  - name: NearForeground
+    uniqueID: 105
+    locked: 0
+  - name: FX
+    uniqueID: 106
+    locked: 0
+  - name: UI
+    uniqueID: 107
+    locked: 0
   m_RenderingLayers:
   - Default
   m_MigratedRenderPipelines: []

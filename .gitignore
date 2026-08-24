@@ -88,3 +88,6 @@ crashlytics-build.properties
 ehthumbs.db
 Thumbs.db
 .idea/
+
+# Scratch screenshots from unity-mcp verification loop
+DuduAdventure/_shots/
