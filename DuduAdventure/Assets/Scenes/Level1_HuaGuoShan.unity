@@ -145,8 +145,8 @@ Transform:
   m_GameObject: {fileID: 84635975}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 30, y: -2, z: 0}
-  m_LocalScale: {x: 3.13, y: 1.7, z: 1}
+  m_LocalPosition: {x: 30, y: -1, z: 0}
+  m_LocalScale: {x: 7.91, y: 0.78, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 764900791}
@@ -159,7 +159,7 @@ SpriteRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 84635975}
-  m_Enabled: 0
+  m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
@@ -200,7 +200,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: -1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -2377651188352613268, guid: 8c1b4332cd3be4536993797f136bb3af, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 4b4fe2c5b4e6f4f02ab6434d865fc844, type: 3}
   m_Color: {r: 0.45, g: 0.45, b: 0.48, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -956,7 +956,6 @@ Transform:
   - {fileID: 84635976}
   - {fileID: 1328357565}
   - {fileID: 2124738546}
-  - {fileID: 1769036707}
   - {fileID: 343571486}
   - {fileID: 1267980559}
   m_Father: {fileID: 0}
@@ -1911,11 +1910,11 @@ Transform:
   m_GameObject: {fileID: 1769036706}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 30, y: 0, z: 0}
-  m_LocalScale: {x: 6.5406976, y: 1.5625, z: 1}
+  m_LocalPosition: {x: 30, y: 2, z: 0}
+  m_LocalScale: {x: 4.520089, y: 4.520089, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 764900791}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1769036708
 SpriteRenderer:
@@ -1966,7 +1965,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: -100
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 9a17a7bc1bcdd4a4ab8c7193f90ed915, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 2a04851569c304f8f839b437ee33fa86, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -2266,10 +2265,10 @@ MonoBehaviour:
   _lookAheadDistance: 2
   _lookAheadSmoothSpeed: 4
   _useBounds: 1
-  _autoBounds: 1
+  _autoBounds: 0
   _boundsPadding: 5
-  _boundsMin: {x: -50, y: -10}
-  _boundsMax: {x: 80, y: 30}
+  _boundsMin: {x: -10.5, y: -4}
+  _boundsMax: {x: 70.5, y: 6}
   _maxShakeAmount: 0.5
   _shakeDecay: 5
 --- !u!114 &1959078352
@@ -2646,3 +2645,4 @@ SceneRoots:
   - {fileID: 1803027776}
   - {fileID: 233783482}
   - {fileID: 1426326467}
+  - {fileID: 1769036707}
