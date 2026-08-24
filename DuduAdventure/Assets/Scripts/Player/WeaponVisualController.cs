@@ -46,11 +46,14 @@ namespace DuduAdventure.Player
         #region 配置
 
         [Header("武器挂载 - 空闲")]
+        // v3 sprite (280×343, baseline y=331, PPU=175) 前手（viewer's right）大约在 pixel (200, 240)，
+        // 对应角色本地 world (0.34, -0.39)。取 (0.30, -0.30) 让 pivot（棒身 grip 端）落在拳心稍上、略向前，
+        // 既贴住手，又让棒身底部略微伸到手下方，避免看起来"漂浮"。
         [Tooltip("空闲时武器握把相对角色中心的偏移（面向右时）")]
-        [SerializeField] private Vector2 _weaponOffset = new Vector2(0.15f, 0.15f);
+        [SerializeField] private Vector2 _weaponOffset = new Vector2(0.30f, -0.30f);
 
         [Tooltip("空闲时武器的旋转角（度，0=竖直向上，正=逆时针）")]
-        [SerializeField] private float _idleAngle = 25f;
+        [SerializeField] private float _idleAngle = -15f;
 
         [Tooltip("武器精灵的排序层级（相对角色）")]
         [SerializeField] private int _sortingOrderOffset = 1;

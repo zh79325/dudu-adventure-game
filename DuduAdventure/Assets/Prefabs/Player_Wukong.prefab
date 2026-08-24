@@ -557,8 +557,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ae569f963b5c4d6e8ca77dbeaa71004, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Player.WeaponVisualController
-  _weaponOffset: {x: 0.15, y: 0.15}
-  _idleAngle: 25
+  _weaponOffset: {x: 0.3, y: -0.3}
+  _idleAngle: -15
   _sortingOrderOffset: 1
   _attackPoses:
   - Offset: {x: 0.15, y: 0.55}
