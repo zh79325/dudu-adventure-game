@@ -35,7 +35,6 @@ namespace DuduAdventure.Enemy
         private Transform _visualTransform;
         private SpriteRenderer _spriteRenderer;
         private Vector3 _baseScale;
-        private Vector3 _baseLocalPos;
         private Vector3 _lastPosition;
 
         private float _breathTimer;
@@ -60,7 +59,6 @@ namespace DuduAdventure.Enemy
             }
 
             _baseScale = _visualTransform.localScale;
-            _baseLocalPos = _visualTransform.localPosition;
             _lastPosition = transform.position;
 
             // 订阅受击事件
@@ -81,23 +79,20 @@ namespace DuduAdventure.Enemy
             _lastPosition = transform.position;
 
             Vector3 scale = _baseScale;
-            Vector3 offset = Vector3.zero;
-            float rotation = 0f;
 
             if (_isMoving)
             {
-                ApplyMoveBob(ref scale, ref offset, ref rotation);
+                ApplyMoveScale(ref scale);
             }
             else
             {
                 ApplyBreathing(ref scale);
             }
 
-            ApplyHitShake(ref offset);
+            ApplyHitScale(ref scale);
 
+            // 只修改缩放，不动位置/旋转
             _visualTransform.localScale = scale;
-            _visualTransform.localPosition = _baseLocalPos + offset;
-            _visualTransform.localRotation = Quaternion.Euler(0f, 0f, rotation);
         }
 
         private void OnDestroy()
@@ -121,30 +116,23 @@ namespace DuduAdventure.Enemy
             scale.x = _baseScale.x * (1f - breath * 0.5f);
         }
 
-        private void ApplyMoveBob(ref Vector3 scale, ref Vector3 offset, ref float rotation)
+        private void ApplyMoveScale(ref Vector3 scale)
         {
             _moveTimer += Time.deltaTime * _moveBobSpeed;
 
-            float bob = Mathf.Abs(Mathf.Sin(_moveTimer)) * _moveBobAmplitude;
-            offset.y = bob;
-
-            float squash = Mathf.Sin(_moveTimer * 2f) * 0.02f;
-            scale.x = _baseScale.x * (0.97f + squash);
-            scale.y = _baseScale.y * (1.03f - squash);
-
-            // 朝向倾斜
-            float dir = _spriteRenderer != null && _spriteRenderer.flipX ? -1f : 1f;
-            rotation = -dir * _moveLeanAngle * Mathf.Abs(Mathf.Sin(_moveTimer * 0.5f));
+            float cycle = Mathf.Sin(_moveTimer);
+            scale.x = _baseScale.x * (1f + cycle * 0.03f);
+            scale.y = _baseScale.y * (1f - cycle * 0.03f);
         }
 
-        private void ApplyHitShake(ref Vector3 offset)
+        private void ApplyHitScale(ref Vector3 scale)
         {
             if (_hitTimer > 0f)
             {
                 _hitTimer -= Time.deltaTime;
                 float t = _hitTimer / _hitShakeDuration;
-                float shake = Mathf.Sin(Time.time * 40f) * _hitShakeIntensity * t;
-                offset.x += shake;
+                float shake = Mathf.Sin(Time.time * 40f) * 0.12f * t;
+                scale.x = _baseScale.x * (1f + shake);
             }
         }
 

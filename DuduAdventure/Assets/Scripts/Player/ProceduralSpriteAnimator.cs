@@ -52,7 +52,6 @@ namespace DuduAdventure.Player
         private PlayerController _controller;
         private Transform _visualTransform;
         private Vector3 _baseScale;
-        private Vector3 _baseLocalPos;
 
         private float _breathTimer;
         private float _runTimer;
@@ -83,7 +82,6 @@ namespace DuduAdventure.Player
             }
 
             _baseScale = _visualTransform.localScale;
-            _baseLocalPos = _visualTransform.localPosition;
         }
 
         private void LateUpdate()
@@ -95,10 +93,8 @@ namespace DuduAdventure.Player
             // 检测状态切换
             DetectStateTransitions(currentState);
 
-            // 计算目标变形
+            // 计算目标变形（只修改缩放，不动位置/旋转，避免与物理移动冲突）
             Vector3 scale = _baseScale;
-            Vector3 offset = Vector3.zero;
-            float rotation = 0f;
 
             // 根据状态施加动画
             switch (currentState)
@@ -108,7 +104,7 @@ namespace DuduAdventure.Player
                     break;
 
                 case PlayerState.Run:
-                    ApplyRunBob(ref scale, ref offset, ref rotation);
+                    ApplyRunScale(ref scale);
                     break;
 
                 case PlayerState.Jump:
@@ -120,17 +116,15 @@ namespace DuduAdventure.Player
                     break;
 
                 case PlayerState.Hit:
-                    ApplyHitShake(ref offset);
+                    ApplyHitScale(ref scale);
                     break;
             }
 
             // 叠加落地压扁（任何状态都可能触发）
             ApplyLandSquash(ref scale);
 
-            // 应用变形
+            // 只应用缩放
             _visualTransform.localScale = scale;
-            _visualTransform.localPosition = _baseLocalPos + offset;
-            _visualTransform.localRotation = Quaternion.Euler(0f, 0f, rotation);
 
             _lastState = currentState;
         }
@@ -181,24 +175,16 @@ namespace DuduAdventure.Player
         }
 
         /// <summary>
-        /// 跑步弹跳：上下bob + 前倾 + 轻微横向压缩
+        /// 跑步变形：交替压缩拉伸模拟步伐节奏
         /// </summary>
-        private void ApplyRunBob(ref Vector3 scale, ref Vector3 offset, ref float rotation)
+        private void ApplyRunScale(ref Vector3 scale)
         {
             _runTimer += Time.deltaTime * _runBobSpeed;
 
-            // 上下弹跳（取绝对值产生双频效果）
-            float bob = Mathf.Abs(Mathf.Sin(_runTimer)) * _runBobAmplitude;
-            offset.y = bob;
-
-            // 交替压缩拉伸（模拟步伐）
-            float squash = Mathf.Sin(_runTimer * 2f) * 0.03f;
-            scale.x = _baseScale.x * (_runSquashX + squash);
-            scale.y = _baseScale.y * (_runStretchY - squash);
-
-            // 前倾（根据朝向方向）
-            float facingDir = GetFacingDirection();
-            rotation = -facingDir * _runLeanAngle * Mathf.Abs(Mathf.Sin(_runTimer * 0.5f));
+            // 交替压缩拉伸（模拟步伐弹跳）
+            float cycle = Mathf.Sin(_runTimer);
+            scale.x = _baseScale.x * (1f + cycle * 0.04f);
+            scale.y = _baseScale.y * (1f - cycle * 0.04f);
         }
 
         /// <summary>
@@ -246,31 +232,17 @@ namespace DuduAdventure.Player
         }
 
         /// <summary>
-        /// 受击抖动：高频水平偏移
+        /// 受击变形：快速X轴缩放振荡
         /// </summary>
-        private void ApplyHitShake(ref Vector3 offset)
+        private void ApplyHitScale(ref Vector3 scale)
         {
             if (_hitShakeTimer > 0f)
             {
                 _hitShakeTimer -= Time.deltaTime;
                 float t = _hitShakeTimer / _hitShakeDuration;
-                float shake = Mathf.Sin(Time.time * _hitShakeSpeed) * _hitShakeIntensity * t;
-                offset.x = shake;
+                float shake = Mathf.Sin(Time.time * _hitShakeSpeed) * 0.1f * t;
+                scale.x = _baseScale.x * (1f + shake);
             }
-        }
-
-        #endregion
-
-        #region 工具方法
-
-        private float GetFacingDirection()
-        {
-            var sr = _visualTransform.GetComponent<SpriteRenderer>();
-            if (sr != null)
-            {
-                return sr.flipX ? -1f : 1f;
-            }
-            return 1f;
         }
 
         #endregion
