@@ -30,6 +30,9 @@ namespace DuduAdventure.Equipment
         [Tooltip("装备图标（UI 用）")]
         public Sprite Icon;
 
+        [Tooltip("武器在角色手上的精灵（仅 Weapon 槽位有效）")]
+        public Sprite WeaponSprite;
+
         [Tooltip("装备槽位")]
         public EquipmentSlot Slot = EquipmentSlot.Weapon;
 

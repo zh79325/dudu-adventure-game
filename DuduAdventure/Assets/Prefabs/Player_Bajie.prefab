@@ -59,6 +59,7 @@ GameObject:
   - component: {fileID: 5910501687518444346}
   - component: {fileID: 3555502274909376228}
   - component: {fileID: 3790045176780126831}
+  - component: {fileID: 3666649268747255012}
   m_Layer: 9
   m_Name: Player_Bajie
   m_TagString: Player
@@ -510,6 +511,27 @@ MonoBehaviour:
   _hitShakeIntensity: 0.1
   _hitShakeDuration: 0.3
   _hitShakeSpeed: 40
+--- !u!114 &3666649268747255012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7649244050215804869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ae569f963b5c4d6e8ca77dbeaa71004, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Player.WeaponVisualController
+  _weaponOffset: {x: 0.3, y: 0.2}
+  _idleAngle: -30
+  _sortingOrderOffset: 1
+  _attackStartAngle: 60
+  _attackEndAngle: -120
+  _attackDuration: 0.25
+  _walkSwayAmplitude: 15
+  _walkSwaySpeed: 8
+  _defaultWeaponSprite: {fileID: 2919694196855231542, guid: 0af16d33a2004445a87b340562f9559f, type: 3}
 --- !u!1 &7861761815158082890
 GameObject:
   m_ObjectHideFlags: 0
