@@ -42,10 +42,16 @@ namespace DuduAdventure.Camera
         [Tooltip("是否启用边界限制")]
         [SerializeField] private bool _useBounds = true;
 
-        [Tooltip("关卡最小边界（左下角）")]
+        [Tooltip("自动计算边界（根据场景中 Environment 物体的渲染范围）")]
+        [SerializeField] private bool _autoBounds = true;
+
+        [Tooltip("自动边界额外留白（单位：世界坐标）")]
+        [SerializeField] private float _boundsPadding = 2f;
+
+        [Tooltip("关卡最小边界（左下角）— autoBounds 开启时会被自动覆盖")]
         [SerializeField] private Vector2 _boundsMin = new Vector2(-50f, -10f);
 
-        [Tooltip("关卡最大边界（右上角）")]
+        [Tooltip("关卡最大边界（右上角）— autoBounds 开启时会被自动覆盖")]
         [SerializeField] private Vector2 _boundsMax = new Vector2(50f, 30f);
 
         [Header("屏幕震动")]
@@ -106,6 +112,12 @@ namespace DuduAdventure.Camera
             if (_target == null)
             {
                 Debug.LogWarning("[CameraFollow] 未找到跟随目标，等待玩家加入或在 Inspector 中设置 Target");
+            }
+
+            // 自动计算边界
+            if (_autoBounds && _useBounds)
+            {
+                RecalculateBounds();
             }
 
             // 计算视口半尺寸（用于边界限制）
@@ -349,6 +361,59 @@ namespace DuduAdventure.Camera
             _boundsMin = min;
             _boundsMax = max;
             _useBounds = true;
+        }
+
+        /// <summary>
+        /// 根据场景内容重新计算摄像机边界
+        /// </summary>
+        /// <remarks>
+        /// 优先使用名为 "Environment" 的 GameObject 下所有 Renderer 的包围盒。
+        /// 如果找不到 Environment，则回退到场景中所有 SpriteRenderer。
+        /// 可在副本加载完成或房间动态生成后调用，确保摄像机能覆盖全部区域。
+        /// </remarks>
+        public void RecalculateBounds()
+        {
+            Bounds sceneBounds = new Bounds(Vector3.zero, Vector3.zero);
+            bool found = false;
+
+            // 优先从 Environment 物体获取范围
+            var envGO = GameObject.Find("Environment");
+            Renderer[] renderers = null;
+
+            if (envGO != null)
+            {
+                renderers = envGO.GetComponentsInChildren<Renderer>();
+            }
+
+            // 回退：全场景 SpriteRenderer
+            if (renderers == null || renderers.Length == 0)
+            {
+                renderers = Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None);
+            }
+
+            foreach (var r in renderers)
+            {
+                if (!found)
+                {
+                    sceneBounds = r.bounds;
+                    found = true;
+                }
+                else
+                {
+                    sceneBounds.Encapsulate(r.bounds);
+                }
+            }
+
+            if (!found)
+            {
+                Debug.LogWarning("[CameraFollow] RecalculateBounds: 未找到任何 Renderer，保持当前边界");
+                return;
+            }
+
+            _boundsMin = new Vector2(sceneBounds.min.x - _boundsPadding, sceneBounds.min.y - _boundsPadding);
+            _boundsMax = new Vector2(sceneBounds.max.x + _boundsPadding, sceneBounds.max.y + _boundsPadding);
+
+            Debug.Log($"[CameraFollow] 自动边界: ({_boundsMin.x:F1}, {_boundsMin.y:F1}) ~ ({_boundsMax.x:F1}, {_boundsMax.y:F1})");
         }
 
         /// <summary>

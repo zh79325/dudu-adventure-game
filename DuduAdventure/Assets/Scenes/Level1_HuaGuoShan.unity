@@ -136,7 +136,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &21591227
 Transform:
   m_ObjectHideFlags: 0
@@ -422,7 +422,7 @@ Transform:
   m_GameObject: {fileID: 184752397}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -8, y: -1.5, z: 0}
+  m_LocalPosition: {x: -5, y: -1.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1932,7 +1932,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1753750932
 Transform:
   m_ObjectHideFlags: 0
@@ -2164,7 +2164,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1857810530
 Transform:
   m_ObjectHideFlags: 0
@@ -2482,8 +2482,10 @@ MonoBehaviour:
   _lookAheadDistance: 2
   _lookAheadSmoothSpeed: 4
   _useBounds: 1
+  _autoBounds: 1
+  _boundsPadding: 2
   _boundsMin: {x: -50, y: -10}
-  _boundsMax: {x: 50, y: 30}
+  _boundsMax: {x: 80, y: 30}
   _maxShakeAmount: 0.5
   _shakeDecay: 5
 --- !u!114 &1959078352
@@ -2655,6 +2657,7 @@ MonoBehaviour:
   - {fileID: 254296560}
   - {fileID: 797236811}
   _victoryDelay: 2
+  _testMode: 1
 --- !u!4 &2015142632
 Transform:
   m_ObjectHideFlags: 0
