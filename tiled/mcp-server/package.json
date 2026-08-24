@@ -1,0 +1,15 @@
+{
+  "name": "tiled-mcp-server",
+  "version": "1.0.0",
+  "description": "Simple MCP Server for Tiled Map Editor integration",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "keywords": ["mcp", "tiled", "map-editor"],
+  "license": "MIT"
+}
