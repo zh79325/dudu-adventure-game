@@ -59,6 +59,7 @@ Style reminder: flat cel-shaded vector, bold black outlines, flat solid colors.
 写 prompt 时的硬性规则：
 
 - **角色设计描述**（`<<<CHARACTER DESIGN CLAUSE>>>`）在所有 18 个姿势里**逐字一致**，只允许姿势子句变化。变一个字都会让模型重新采样外形。
+- **头身比选择**：悟空 v1 用 4.5 heads（较写实），v3 改成 3 heads（MOBA chibi 大头风）。同一套流水线两种头身比都能跑通，选哪种由角色设计决定，但**四角色必须统一**——不然共用碰撞盒 / 阴影会出问题。当前基线是 v3 = 3 heads。
 - **一律 side-front three-quarter view facing RIGHT**（面朝右），画面翻转由 Unity 的 `SpriteRenderer.flipX` 处理，不生成两套镜像。
 - **明确写「hands are always EMPTY CLOSED FISTS」**——武器由 Unity 端叠加，AI 画的武器会画风漂移、颜色不匹配、粗细不一。
 - **底色一定要 `solid flat pure green #00FF00`**，不能是浅绿、绿色渐变、白色。
@@ -132,7 +133,7 @@ python3 tools/build_character_frames.py \
   - 头身比在所有帧里目测一致（若明显不一致，说明画风漂了，重跑 ImageGen）。
 - 若 `total green spill px = 0` 就是抠图干净；不为 0 要调 `chroma_key` 的阈值。
 
-**回归验证**：对同一张 sheet 反复跑本脚本应得到完全相同的结果。悟空的回归产出 `canvas 234x350, anchor_x=117, baseline_row=338`。
+**回归验证**：对同一张 sheet 反复跑本脚本应得到完全相同的结果。悟空 v3 的回归产出 `canvas 280x343, anchor_x=140, baseline_row=331`（v1 曾是 `234x350, anchor_x=117, baseline_row=338`——换头身比会改画布，是预期的）。
 
 
 ## 5. Unity 导入设置
@@ -148,7 +149,7 @@ python3 tools/build_character_frames.py \
 |------|-----|--------|
 | `textureType` | `Sprite` | — |
 | `spriteMode` | `Single` (=1) | **必须 Single**。`Multiple` (=2) 会自动切子精灵，Prefab 引用容易撞到碎片（historic bug 就是这么产生的） |
-| `spritePixelsPerUnit` | 角色 **175**，武器根据长度调（金箍棒 **660** → 1.61 单位 ≈ 角色身高 0.89） | 175 是让 234×349 画布落到 1.337 × 1.994 世界单位的数值，跟场景相机 ortho 5.625 匹配 |
+| `spritePixelsPerUnit` | 角色 **175**，武器根据长度调（金箍棒 **660** → 1.61 单位 ≈ 角色身高 0.82） | 175 是让角色画布落到约 2 世界单位高（v1 234×349 → 1.337×1.994；v3 280×343 → 1.6×1.96），跟场景相机 ortho 5.625 匹配。四角色必须共用同一 PPU 才能视觉齐高 |
 | `spriteAlignment` | `Center` (=0) | 用统一画布 + 统一基线之后，Center 相当于脚下方 `pad` 像素处，`BoxCollider2D` / `GroundCheck` / `CharacterShadow` 都不用改 |
 | `spriteMeshType` | `FullRect` (=1) | Tight 会把透明边裁掉，破坏统一画布的对齐前提 |
 | `spriteExtrude` | `1` | 减少 UV 采样锯齿 |
@@ -178,10 +179,14 @@ python3 tools/build_character_frames.py \
 - `WeaponVisualController`
   - `_defaultWeaponSprite = <角色武器>`
   - `_weaponScale = 1`（武器长度靠 PPU 控制，不靠 scale）
-  - `_weaponOffset = (0.34, -0.25)`（金箍棒实测值。改武器要重看：站立时武器顶端应在头右上、末端应过腰）
-  - `_idleAngle = -25`（度）
+  - `_weaponOffset = (0.15, 0.15)`（Idle 时握把相对角色中心的偏移。**握把端**——不是武器中心。悟空 v3 实测值，换武器要重看）
+  - `_idleAngle = 25`（度，正值=逆时针，即棒尖偏向角色背后方向；idle 时武器斜靠在肩上）
   - `_walkSwayAmplitude = 10`
-  - `_attackStartAngle = 55`，`_attackEndAngle = -115`，`_attackDuration = 0.28`
+  - `_attackPoses[]` = 3 帧关键姿势数组（起势 / 挥出 / 收势）。悟空 v3 横劈值：
+    - Pose 0: Offset (0.15, 0.55), Rotation 30 —— 高举过头顶，棒尖后翘
+    - Pose 1: Offset (0.40, 0.20), Rotation -75 —— 前推至胸前，横劈接触
+    - Pose 2: Offset (0.35, -0.15), Rotation -140 —— 收势至前下方
+  - **武器 sprite 的 pivot 必须是 Custom(0.5, 0.08)**——即握把端在底部中间。写在 `.png.meta` 的 `alignment: 9` + `spritePivot: {x:0.5, y:0.08}`。用 Center pivot 会让棒身绕自身中点风车式转动（历史 bug）
 - `CharacterShadow._footOffset = (0, 0.067)`（234×349 画布下方留白 11 px 的补偿；换尺寸时用 `pad / height * world_height` 重算）
 
 `SkillDefinition` 资产（`Assets/Data/Skills/Skill_<Name><Skill>.asset`）新增字段：
@@ -214,28 +219,30 @@ python3 tools/build_character_frames.py \
 跳步骤会导致：一旦流程里某个参数需要调（比如 PPU、weapon offset），三个角色都要返工。
 
 
-## 9. 附录 A：悟空姿势子句（完整版）
+## 9. 附录 A：悟空姿势子句（v3 版，当前生产基线）
 
 保留作为**参考模板**，其他角色抄结构改内容。完整的 prompt（含风格头/尾/网格约束/背景禁项）见 §2；这里只列**角色设计描述**和**姿势清单**部分。
 
-**Character Design Clause（悟空）**：
+> v3 相对 v1 的变化：4.5 heads → 3 heads；金冠+雉尾 → 狂野蓬松金鬃无冠；红色武术袍 → 金鳞甲 + 红内衬；圆眼萌娃 → 杏仁眼英雄气。参考用户提供的 MOBA-chibi 参考图。
+
+**Character Design Clause（悟空 v3）**：
 
 ```
-Sun Wukong the Monkey King as a side-scrolling brawler sprite, side-front three-quarter view facing RIGHT, heroic-chibi build 4.5 heads tall, slim. Golden-yellow furred monkey face, cream muzzle, red-orange mask markings around sharp dark eyes, one small fang. Spiky golden mane. Gold headband crown with a red gem and two long crimson pheasant feathers arching up and back. Red sleeveless martial tunic, red neck knot, one gold scrollwork shoulder pauldron, gold-edged red skirt panels with golden flame motifs. Brown belt with a round gold buckle. Golden fur forearm bracers and ankle cuffs. Brown boots with gold trim. Long slender golden tail curving up behind.
+Sun Wukong the Monkey King as a chibi MOBA-style brawler hero, side-front three-quarter view facing RIGHT, heroic-chibi build 3 heads tall with wide-shouldered stocky proportions. Big head with wild windswept spiky golden-yellow mane radiating outward in all directions, no crown, no headband, no phoenix feathers. Almond-shaped amber-brown eyes with sharp dark eyebrows and a confident half-smile revealing two small fangs. Cream-colored monkey muzzle, subtle red mask markings around the eyes. Torso wrapped in layered golden scale-mail armor with plate details on the chest, red inner tunic showing at the collar and skirt hem, gold pauldrons carved with cloud motifs. Wide brown leather belt with a large golden lion-head buckle at the front. Golden fur forearm bracers and greaves worn over red pants, brown boots with gold trim. Short thick fluffy golden tail curling up behind. Hands are always EMPTY CLOSED FISTS, no staff, no weapon.
 ```
 
-**姿势清单（悟空）**：
+**姿势清单（悟空 v3，横向劈砍版）**：
 
 ```
 TOP ROW:
-1 IDLE upright, feet flat apart, arms at sides.
-2 WALK big scissor stride, near leg far forward heel down, far leg far back toe pushing off.
-3 WALK near leg straight under body, far knee lifted high foot off ground.
+1 IDLE upright, feet flat apart, arms relaxed at sides, tail curled up behind.
+2 WALK big scissor stride, near leg far forward heel down, far leg far back toe pushing off, opposite arms swinging.
+3 WALK near leg straight under body, far knee lifted high foot off ground, torso slightly leaning forward.
 4 WALK mirror of 2, the OPPOSITE leg leads forward, arms swapped.
 5 WALK mirror of 3, far leg straight under body, NEAR knee lifted high.
-6 ATTACK WINDUP both fists stacked in a two-handed grip raised high above and behind the head, torso twisted back, shouting.
-7 ATTACK STRIKE deep forward lunge, both fists thrust straight forward at chest height in a two-handed grip, arms extended, shouting.
-8 ATTACK RECOVER feet together, slight crouch, both fists pulled down in front of the waist.
+6 ATTACK WINDUP horizontal-slash windup, right fist cocked HIGH above and BEHIND the right shoulder gripping an invisible weapon, left arm forward for balance, torso twisted backward and to the right, feet wide, shouting.
+7 ATTACK STRIKE mid-swing horizontal slash, right arm swept forward and across the body at CHEST height in a hard sideways chop, torso rotated forward with left arm counterbalancing back, deep forward lunge, shouting.
+8 ATTACK RECOVER follow-through, right arm swung down and past the LEFT knee as if a hard slash has just completed, torso leaning forward with weight over front leg, panting.
 9 SWEEP WINDUP wide stance, torso coiled back, both fists together low beside the rear hip at knee height.
 
 BOTTOM ROW:
@@ -250,13 +257,15 @@ BOTTOM ROW:
 18 HAVOC END rising up, torso half upright, fists low and wide at the sides, feet wide apart, panting.
 ```
 
+**（历史）v1 姿势子句**：4.5 heads + 金冠雉尾 + 双手抡棒攻击（`6 ATTACK WINDUP both fists stacked in a two-handed grip raised high above and behind the head` ...）已弃用；仅在 git 历史里查阅。
+
 
 ## 10. 附录 B：其他三角色出发点
 
 **八戒 / 沙僧 / 唐僧的 Character Design Clause 起草时的原则：**
 
-- 保持「side-front three-quarter view facing RIGHT, heroic-chibi build 4.5 heads tall」这几条骨架句原封不动，只改**材质 / 服饰 / 面部 / 附加装饰**。
-- 头身比一致（4.5 heads tall）——这是让四个角色能共用同一套碰撞盒、同一套阴影偏移的前提。
+- 保持「side-front three-quarter view facing RIGHT, heroic-chibi build 3 heads tall with wide-shouldered stocky proportions」这几条骨架句原封不动，只改**材质 / 服饰 / 面部 / 附加装饰**。
+- 头身比一致（3 heads tall，跟悟空 v3 对齐）——这是让四个角色能共用同一套碰撞盒、同一套阴影偏移的前提。如果某个角色的历史设定强烈要求不同头身比（比如八戒偏矮胖），先跟用户确认能否统一，或者接受重调 CollisionBox / footOffset 的代价。
 - 武器不入 body sheet，由独立武器 sprite 挂 `WeaponVisualController`。
 - 技能名 / 姿势要跟对应的 `SkillDefinition` 对齐；八戒 / 沙僧 / 唐僧的技能定义在 `Assets/Data/Skills/` 下（详见 `docs/DUNGEON_COOP.md`）。
 
