@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 1282980909350926221}
   - component: {fileID: 3557507592967414756}
   m_Layer: 10
-  m_Name: Enemy_Slime
+  m_Name: Enemy_Boss_HunshiMowang
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -32,7 +32,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 3, y: 3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -87,7 +87,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: -1342021535860967191, guid: f1de59a93daa04b8e99bb71dae7027f4, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.2, b: 0.2, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -182,7 +182,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5125ecb2eb4524267b3e5c69acde54e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Combat.HealthComponent
-  _maxHP: 5
+  _maxHP: 50
   _startAtFullHP: 1
   _initialHP: 100
   _invincibilityDuration: 1
