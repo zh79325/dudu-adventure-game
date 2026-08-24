@@ -286,7 +286,9 @@ namespace DuduAdventure.Core
             CurrentStateName = newStateName;
             CurrentState.Enter(_context);
 
+            #if UNITY_EDITOR && STATEMACHINE_VERBOSE
             Debug.Log($"[StateMachine] 状态转换: {oldStateName} -> {newStateName}");
+            #endif
         }
     }
 }

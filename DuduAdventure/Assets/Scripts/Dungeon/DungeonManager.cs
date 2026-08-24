@@ -28,6 +28,10 @@ namespace DuduAdventure.Dungeon
         [Tooltip("Boss 击杀后延迟多久显示通关（秒）")]
         [SerializeField] private float _victoryDelay = 2f;
 
+        [Header("调试")]
+        [Tooltip("测试模式：每房间只刷 1 只怪，HP=1，快速跑通流程")]
+        [SerializeField] private bool _testMode;
+
         #endregion
 
         #region 事件
@@ -60,6 +64,7 @@ namespace DuduAdventure.Dungeon
         public int CurrentRoomIndex => _currentRoomIndex;
         public int TotalRooms => _rooms != null ? _rooms.Length : 0;
         public bool IsCompleted => _dungeonCompleted;
+        public bool TestMode => _testMode;
 
         #endregion
 

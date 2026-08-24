@@ -110,14 +110,17 @@ namespace DuduAdventure.Dungeon
 
         private IEnumerator SpawnWaveRoutine()
         {
-            while (_currentWaveIndex < _waves.Length)
+            bool testMode = DungeonManager.Instance != null && DungeonManager.Instance.TestMode;
+            int waveCount = testMode ? 1 : _waves.Length;
+
+            while (_currentWaveIndex < waveCount)
             {
                 var wave = _waves[_currentWaveIndex];
-                OnWaveChanged?.Invoke(_currentWaveIndex, _waves.Length);
-                Debug.Log($"[Room {_roomIndex}] 第 {_currentWaveIndex + 1}/{_waves.Length} 波");
+                OnWaveChanged?.Invoke(_currentWaveIndex, waveCount);
+                Debug.Log($"[Room {_roomIndex}] 第 {_currentWaveIndex + 1}/{waveCount} 波{(testMode ? " (测试模式)" : "")}");
 
                 // 生成当前波的所有敌人
-                SpawnWave(wave);
+                SpawnWave(wave, testMode);
 
                 // 等待当前波全部击杀
                 yield return new WaitUntil(() => _aliveEnemies.Count == 0);
@@ -125,7 +128,7 @@ namespace DuduAdventure.Dungeon
                 _currentWaveIndex++;
 
                 // 波次间隔
-                if (_currentWaveIndex < _waves.Length)
+                if (_currentWaveIndex < waveCount)
                 {
                     yield return new WaitForSeconds(_waveCooldown);
                 }
@@ -135,7 +138,7 @@ namespace DuduAdventure.Dungeon
             ClearRoom();
         }
 
-        private void SpawnWave(WaveConfig wave)
+        private void SpawnWave(WaveConfig wave, bool testMode = false)
         {
             if (wave.Entries == null) return;
 
@@ -143,7 +146,10 @@ namespace DuduAdventure.Dungeon
             {
                 if (entry.EnemyPrefab == null || entry.SpawnPoints == null) continue;
 
-                for (int i = 0; i < entry.SpawnPoints.Length; i++)
+                // 测试模式：每个 entry 只生成 1 只怪，HP=1
+                int spawnCount = testMode ? 1 : entry.SpawnPoints.Length;
+
+                for (int i = 0; i < spawnCount; i++)
                 {
                     var spawnPos = entry.SpawnPoints[i] != null
                         ? entry.SpawnPoints[i].position
@@ -156,9 +162,18 @@ namespace DuduAdventure.Dungeon
                     var health = enemy.GetComponent<Combat.HealthComponent>();
                     if (health != null)
                     {
+                        // 测试模式下强制 1 HP
+                        if (testMode)
+                        {
+                            health.SetMaxHP(1, fillToMax: true);
+                        }
+
                         health.OnDeath += () => OnEnemyDied(enemy);
                     }
                 }
+
+                // 测试模式下只用第一个 entry
+                if (testMode) break;
             }
         }
 
