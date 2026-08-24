@@ -53,7 +53,9 @@ namespace DuduAdventure.Player
         [SerializeField] private Vector2 _weaponOffset = new Vector2(0.30f, -0.30f);
 
         [Tooltip("空闲时武器的旋转角（度，0=竖直向上，正=逆时针）")]
-        [SerializeField] private float _idleAngle = -15f;
+        // 参考「英雄横挎金箍棒」的 chibi 立绘：棒身斜挎过身、棒尖翘到背后头肩之上。
+        // 角色面朝右时背侧在 viewer's 左，正值 CCW 让棒尖偏左上；+45 让棒身接近对角斜挎。
+        [SerializeField] private float _idleAngle = 45f;
 
         [Tooltip("武器精灵的排序层级（相对角色）")]
         [SerializeField] private int _sortingOrderOffset = 1;
