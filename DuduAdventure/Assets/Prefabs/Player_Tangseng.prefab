@@ -27,6 +27,7 @@ GameObject:
   - component: {fileID: 6828898455530294299}
   - component: {fileID: -2981438563079899063}
   - component: {fileID: 3981739842399828994}
+  - component: {fileID: 7660712046293876553}
   m_Layer: 9
   m_Name: Player_Tangseng
   m_TagString: Player
@@ -449,6 +450,35 @@ MonoBehaviour:
   _enemyLayer:
     serializedVersion: 2
     m_Bits: 1024
+--- !u!114 &7660712046293876553
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 197004529156047667}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44b5f5fc7e2834a868eda6bf254e2c17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Player.ProceduralSpriteAnimator
+  _breathSpeed: 2
+  _breathAmplitude: 0.03
+  _runBobSpeed: 12
+  _runBobAmplitude: 0.06
+  _runLeanAngle: 8
+  _runSquashX: 0.95
+  _runStretchY: 1.05
+  _jumpStretchX: 0.85
+  _jumpStretchY: 1.2
+  _landSquashX: 1.25
+  _landSquashY: 0.75
+  _landSquashDuration: 0.15
+  _attackPunchScale: 1.2
+  _attackPunchDuration: 0.12
+  _hitShakeIntensity: 0.1
+  _hitShakeDuration: 0.3
+  _hitShakeSpeed: 40
 --- !u!1 &2278526735363965621
 GameObject:
   m_ObjectHideFlags: 0

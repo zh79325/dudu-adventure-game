@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 3728197863596604266}
   - component: {fileID: 1282980909350926221}
   - component: {fileID: 3557507592967414756}
+  - component: {fileID: 3413830234537924537}
   m_Layer: 10
   m_Name: Enemy_Slime
   m_TagString: Untagged
@@ -229,3 +230,22 @@ MonoBehaviour:
   _dropPickupPrefab: {fileID: 7710473733632270589, guid: bcc4f970f1bab48d0b16036c55d87603, type: 3}
   _spawnYOffset: 0.5
   _spreadRange: 0.5
+--- !u!114 &3413830234537924537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4302155728074681043}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8d5b07b46a1f4ac2a12056b686fc9b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DuduAdventure.Enemy.EnemyProceduralAnimator
+  _breathSpeed: 1.5
+  _breathAmplitude: 0.04
+  _moveBobSpeed: 10
+  _moveBobAmplitude: 0.08
+  _moveLeanAngle: 5
+  _hitShakeIntensity: 0.15
+  _hitShakeDuration: 0.2
