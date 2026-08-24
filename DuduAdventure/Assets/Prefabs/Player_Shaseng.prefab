@@ -517,6 +517,7 @@ MonoBehaviour:
   _idleSprite: {fileID: 21300000, guid: abc0d859fc5f541cc9eb2e4780e96b61, type: 3}
   _walkFrame1: {fileID: 8767563802955123020, guid: f3a9ce3a20d554ad180b57a9c6f7b4ad, type: 3}
   _walkFrame2: {fileID: -5619880210995583395, guid: 1862dd8e62d7546be9bb049639cc2ebd, type: 3}
+  _attackSprite: {fileID: 8090255444714780686, guid: 0a34c3156cab44c99b5a02aa64f15474, type: 3}
   _walkFPS: 6
 --- !u!1 &4400102333796946348
 GameObject:

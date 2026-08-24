@@ -3,7 +3,7 @@ using UnityEngine;
 namespace DuduAdventure.Player
 {
     /// <summary>
-    /// 帧精灵动画器 —— 在 Run 状态时交替播放行走帧，其他状态显示 Idle 帧。
+    /// 帧精灵动画器 —— 根据状态切换对应精灵帧。
     /// 与 ProceduralSpriteAnimator 配合使用（后者负责 scale 动画）。
     /// </summary>
     [RequireComponent(typeof(SpriteRenderer))]
@@ -18,6 +18,9 @@ namespace DuduAdventure.Player
 
         [Tooltip("行走帧 2")]
         [SerializeField] private Sprite _walkFrame2;
+
+        [Tooltip("攻击帧")]
+        [SerializeField] private Sprite _attackSprite;
 
         [Header("动画设置")]
         [Tooltip("每秒切换帧数（行走时）")]
@@ -40,27 +43,48 @@ namespace DuduAdventure.Player
 
             var state = _stateMachine.CurrentState;
 
-            if (state == PlayerState.Run && _walkFrame1 != null && _walkFrame2 != null)
+            switch (state)
             {
-                // 行走动画：按 FPS 交替帧
-                _walkTimer += Time.deltaTime * _walkFPS;
-                if (_walkTimer >= 1f)
-                {
-                    _walkTimer -= 1f;
-                    _currentFrame = 1 - _currentFrame; // 0 和 1 交替
-                }
-                _sr.sprite = _currentFrame == 0 ? _walkFrame1 : _walkFrame2;
-            }
-            else
-            {
-                // 非行走状态：显示 Idle 帧
-                if (_idleSprite != null)
-                {
-                    _sr.sprite = _idleSprite;
-                }
-                // 重置行走计时器
-                _walkTimer = 0f;
-                _currentFrame = 0;
+                case PlayerState.Run:
+                    if (_walkFrame1 != null && _walkFrame2 != null)
+                    {
+                        _walkTimer += Time.deltaTime * _walkFPS;
+                        if (_walkTimer >= 1f)
+                        {
+                            _walkTimer -= 1f;
+                            _currentFrame = 1 - _currentFrame;
+                        }
+                        _sr.sprite = _currentFrame == 0 ? _walkFrame1 : _walkFrame2;
+                    }
+                    break;
+
+                case PlayerState.Attack:
+                    if (_attackSprite != null)
+                    {
+                        _sr.sprite = _attackSprite;
+                    }
+                    _walkTimer = 0f;
+                    _currentFrame = 0;
+                    break;
+
+                case PlayerState.Jump:
+                    // 跳跃时用 Walk1 帧（双腿张开的姿势更像跳跃）
+                    if (_walkFrame1 != null)
+                    {
+                        _sr.sprite = _walkFrame1;
+                    }
+                    _walkTimer = 0f;
+                    _currentFrame = 0;
+                    break;
+
+                default:
+                    if (_idleSprite != null)
+                    {
+                        _sr.sprite = _idleSprite;
+                    }
+                    _walkTimer = 0f;
+                    _currentFrame = 0;
+                    break;
             }
         }
     }
