@@ -85,16 +85,66 @@
 
 **已知遗留：** 队长目前固定是第一个加入的人，还没有手动移交队长的操作；玩家死亡后的重生仍走 `LevelManager.RespawnPlayer()` 的单人逻辑，需在阶段 2 一并改成按人重生。
 
-#### 阶段 2：装备与属性
+#### 阶段 2：装备与属性 + 技能系统（已完成）
 
-目标：**打死一只怪掉出一把橙武，捡起来伤害数字变大。**
+目标：**打死一只怪掉出一把橙武，捡起来伤害数字变大。按 U/I/O/P 释放技能消耗蓝量或怒气。**
 
-- `CharacterStats`：血量、攻击、防御、攻速、移速、暴击率、暴击伤害
-- 装备模板（ScriptableObject）+ 运行时词条随机（同一模板可 roll 出不同属性）
-- 稀有度五档：普通 / 精良 / 稀有 / 史诗 / 传说
-- `LootTable`：按怪物档位配权重掉落
-- 属性聚合：基础 + 装备 → 最终值，喂给 `PlayerController` 与 `PlayerCombat`
-- `DamageDealer` 现在是固定 int 伤害，改为读属性
+实际落地的脚本：
+
+| 文件 | 职责 |
+|------|------|
+| `Stats/CharacterStats.cs` | 属性聚合系统：(base+ΣFlat)*(1+ΣPercent)，dirty-flag 缓存 |
+| `Stats/StatModifier.cs` | 属性修改器（flat + percent）|
+| `Stats/LevelSystem.cs` | 经验曲线 base*level^1.5，每级自动加属性 + 特定等级解锁技能 |
+| `Stats/ResourceComponent.cs` | 通用资源组件（Mana 自然回复 / Rage 靠战斗积攒） |
+| `Stats/RageAccumulator.cs` | 监听 OnAttackHit + OnDamaged 积攒怒气 |
+| `Equipment/EquipmentTemplate.cs` | 装备模板 SO，含基础属性与词条池配置 |
+| `Equipment/EquipmentInstance.cs` | 运行时实例，由模板 CreateInstance() 随机 roll 词条 |
+| `Equipment/EquipmentManager.cs` | 6 槽穿戴 + 背包列表，穿脱时更新 CharacterStats |
+| `Equipment/DropPickup.cs` | 地面掉落物，进 Trigger 范围按攻击键拾取（放入背包） |
+| `Equipment/LootTable.cs` | 掉落表 SO，DropChance 门槛 + 按权重选模板 |
+| `Equipment/LootDropper.cs` | 挂在敌人上，死亡时 Roll() 并 Instantiate 掉落物 |
+| `Combat/HealthComponent.cs` | 通用血量组件，TakeDamage / FullHeal / 死亡事件 |
+| `Skill/SkillDefinition.cs` | 技能 SO：消耗类型(Mana/FullRage)、效果类型(MeleeArea/Projectile/Dash/Buff/GroundSlam)、多段命中、前后摇 |
+| `Skill/SkillManager.cs` | 技能管理器：4 槽位(U/I/O/P)、冷却追踪、施法协程、OverlapCircle/BoxCastAll 判定 |
+| `UI/HUDManager.cs` | DNF 式底部 HUD，自动订阅 PlayerRegistry 事件 |
+| `UI/InventoryUI.cs` | 背包 UI，穿戴/丢弃/粉碎按钮 |
+
+**已创建的数据资产：**
+
+- `Assets/Data/Equipment/` — 装备模板 SO（示例武器/防具）
+- `Assets/Data/Skills/Skill_WukongSweep.asset` — 棍扫千军（Mana 15, CD 3s, MeleeArea, 2.5x）
+- `Assets/Data/Skills/Skill_WukongCloudStrike.asset` — 筋斗云冲（Mana 25, CD 6s, Projectile, 3x）
+- `Assets/Data/Skills/Skill_WukongClone.asset` — 分身乱打（Mana 35, CD 10s, MeleeArea 5段, 1.5x, 无敌）
+- `Assets/Data/Skills/Skill_WukongHavoc.asset` — 大闹天宫（FullRage, CD 15s, GroundSlam 3段, 8x, 无敌）
+
+**架构决策：**
+
+- **DNF 式移动模型：** `Rigidbody2D.gravityScale = 0`，X 轴水平移动，Y 轴 = groundY（纵深）+ jumpHeight（腾空），`DepthSortByY` 按 groundY 排序 sortingOrder
+- **属性聚合公式：** `finalValue = (base + ΣflatMods) * (1 + ΣpercentMods)`，修改器按 sourceId 分组管理，dirty-flag 缓存避免每帧计算
+- **装备词条随机：** Fisher-Yates 从模板词条池选词条，按稀有度 roll 数值范围
+- **技能消耗二分：** 小技能耗蓝（ResourceType.Mana），大绝招需满怒气（ResourceType.Rage，RageAccumulator 通过攻击/受伤积攒）
+- **施法流程：** 锁定移动 → 前摇 → 多段判定循环 → 后摇 → 解锁移动 → 开始冷却
+- **伤害计算统一走 CharacterStats.CalculateAttackDamage(multiplier)**，含暴击判定
+- **拾取设计：** 手动拾取（进 Trigger 范围 + 按攻击键），只放背包不自动穿，保持刷宝惊喜感
+
+**已验证的完整链路：**
+
+1. 场景里有敌人（Slime，HP=1 快速测试） → 攻击击杀
+2. 击杀触发 LootDropper.Roll() → 掉落物出现（带稀有度颜色闪烁）
+3. 走到掉落物旁按攻击键 → 拾取放入背包
+4. 打开背包 UI 可穿戴/丢弃/粉碎
+5. 穿戴后 CharacterStats 属性变化 → 攻击伤害数字变大
+6. 按 U/I/O/P 释放技能，消耗蓝量/怒气，对敌人造成技能伤害
+
+**与阶段 4 的关系：** 本阶段实现的 SkillManager 是通用技能框架。阶段 4 的"四角色标志性大招"（七十二变/下耙/横扫/佛光）将复用此框架，增加角色专属的视觉效果和独特机制（如变身、治疗队友）。目前 4 个技能 SO 全部是悟空的通用战斗技能，其他角色的专属技能留待阶段 4 设计。
+
+**已知遗留：**
+
+- SkillManager 输入仍用 `UnityEngine.Input.GetKeyDown` 硬编码键位，多人时需接入 `IPlayerInputSource`
+- 技能无 VFX/音效，需替换 placeholder sprite 为正式动画
+- 技能 HUD 冷却显示尚未实现（SkillSlotUI 待开发）
+- LevelSystem 的技能解锁检查已连接但未在 UI 上展示
 
 #### 阶段 3：副本结构
 
