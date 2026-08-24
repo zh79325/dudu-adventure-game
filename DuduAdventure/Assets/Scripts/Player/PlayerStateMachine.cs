@@ -38,6 +38,12 @@ namespace DuduAdventure.Player
 
         private bool _isStunned;
 
+        /// <summary>
+        /// 攻击锁定计时器 - 防止攻击状态在动画播完前退出
+        /// </summary>
+        private float _attackLockTimer;
+        private const float AttackLockDuration = 0.4f;
+
         #endregion
 
         #region 生命周期
@@ -54,6 +60,9 @@ namespace DuduAdventure.Player
 
         private void Update()
         {
+            if (_attackLockTimer > 0f)
+                _attackLockTimer -= Time.deltaTime;
+
             _stateMachine?.Update();
         }
 
@@ -94,10 +103,10 @@ namespace DuduAdventure.Player
             // Jump -> Run：落地且有输入
             _stateMachine.AddTransition("Jump", "Run", ctx => ctx.IsGrounded && ctx.IsMoving);
 
-            // Attack -> 根据落地情况回到对应状态
-            _stateMachine.AddTransition("Attack", "Idle", ctx => !ctx.IsMoving && ctx.IsGrounded);
-            _stateMachine.AddTransition("Attack", "Run", ctx => ctx.IsMoving && ctx.IsGrounded);
-            _stateMachine.AddTransition("Attack", "Jump", ctx => !ctx.IsGrounded);
+            // Attack -> 根据落地情况回到对应状态（需等攻击锁定结束）
+            _stateMachine.AddTransition("Attack", "Idle", ctx => _attackLockTimer <= 0f && !ctx.IsMoving && ctx.IsGrounded);
+            _stateMachine.AddTransition("Attack", "Run", ctx => _attackLockTimer <= 0f && ctx.IsMoving && ctx.IsGrounded);
+            _stateMachine.AddTransition("Attack", "Jump", ctx => _attackLockTimer <= 0f && !ctx.IsGrounded);
 
             // Hit -> 恢复
             _stateMachine.AddTransition("Hit", "Idle", ctx => ctx.IsGrounded && !_isStunned);
@@ -113,6 +122,7 @@ namespace DuduAdventure.Player
 
         public void TriggerAttack()
         {
+            _attackLockTimer = AttackLockDuration;
             _stateMachine.ForceTransition("Attack");
             CurrentState = PlayerState.Attack;
         }

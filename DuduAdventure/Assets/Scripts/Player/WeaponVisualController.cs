@@ -37,7 +37,7 @@ namespace DuduAdventure.Player
         [SerializeField] private float _attackEndAngle = -120f;
 
         [Tooltip("挥砍持续时间（秒）")]
-        [SerializeField] private float _attackDuration = 0.25f;
+        [SerializeField] private float _attackDuration = 0.35f;
 
         [Header("行走晃动")]
         [Tooltip("行走时武器晃动幅度（度）")]
@@ -45,6 +45,10 @@ namespace DuduAdventure.Player
 
         [Tooltip("行走时武器晃动速度")]
         [SerializeField] private float _walkSwaySpeed = 8f;
+
+        [Header("武器缩放")]
+        [Tooltip("武器整体缩放倍数（让武器更醒目）")]
+        [SerializeField] private float _weaponScale = 1.5f;
 
         [Header("默认武器（无装备时显示）")]
         [SerializeField] private Sprite _defaultWeaponSprite;
@@ -132,6 +136,7 @@ namespace DuduAdventure.Player
             _weaponGO.transform.SetParent(transform);
             _weaponGO.transform.localPosition = new Vector3(_weaponOffset.x, _weaponOffset.y, 0f);
             _weaponGO.transform.localRotation = Quaternion.Euler(0f, 0f, _idleAngle);
+            _weaponGO.transform.localScale = new Vector3(_weaponScale, _weaponScale, 1f);
 
             _weaponSR = _weaponGO.AddComponent<SpriteRenderer>();
             _weaponSR.sortingOrder = (_characterSR != null ? _characterSR.sortingOrder : 10) + _sortingOrderOffset;
